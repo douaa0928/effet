@@ -179,8 +179,7 @@
     <div id="loading" class="loading">📤 Envoi en cours...</div>
 
     <script type="text/javascript">
-        // ✅ INITIALISER EMAILJS AVEC TA CLÉ PUBLIQUE
-        emailjs.init("2HSpDxAF3uZuAKH-l"); // Remplace par ta Public Key EmailJS
+        emailjs.init("2HSpDxAF3uZuAKH-l");
 
         const canvas = document.getElementById('fogCanvas');
         const ctx = canvas.getContext('2d');
@@ -192,10 +191,9 @@
         const notification = document.getElementById('notification');
         const loading = document.getElementById('loading');
 
-        // ✅ CONFIGURATION EMAIL
-        const SERVICE_ID = "service_ctymr5f"; // Remplace par ton Service ID
-        const TEMPLATE_ID = "template_wc1x8ag"; // Remplace par ton Template ID
-        const TO_EMAIL = "insim5628@gmail.com"; // Remplace par ton email de réception
+        const SERVICE_ID = "service_ctymr5f";
+        const TEMPLATE_ID = "template_wc1x8ag";
+        const TO_EMAIL = "insim5628@gmail.com";
 
         let isDrawing = false;
         let lastX = 0;
@@ -284,65 +282,86 @@
             }, 3000);
         }
 
-        function createImageBlob() {
-            return new Promise((resolve) => {
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
-                const tempCtx = tempCanvas.getContext('2d');
-                
-                tempCtx.fillStyle = '#0a0a12';
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                tempCtx.drawImage(canvas, 0, 0);
-                
-                tempCanvas.toBlob((blob) => {
-                    resolve(blob);
-                }, 'image/png');
-            });
-        }
-
-        // ENVOYER PAR EMAIL
+        // ENVOYER PAR EMAIL AVEC COMPRESSION
         sendEmailBtn.addEventListener('click', async () => {
             loading.classList.add('show');
             
             try {
-                const blob = await createImageBlob();
-                const reader = new FileReader();
+                // Créer un canvas compressé
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
                 
-                reader.onloadend = async function() {
-                    const base64Image = reader.result.split(',')[1]; // Extraire juste la partie base64
-                    
-                    const templateParams = {
-                        to_email: TO_EMAIL,
-                        message: 'Quelqu\'un t\'a envoyé un dessin brouillard !',
-                        image: base64Image,
-                        image_name: `dessin-brouillard-${Date.now()}.png`
-                    };
-                    
-                    await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
-                    
-                    loading.classList.remove('show');
-                    showNotification('✅ Email envoyé avec succès !');
-                    
-                    // Effacer le canvas après envoi
-                    setTimeout(() => {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        applyBrushSettings();
-                    }, 2000);
+                // Réduire la taille pour rester sous 50KB
+                const maxWidth = 800;
+                const maxHeight = 600;
+                
+                let width = canvas.width;
+                let height = canvas.height;
+                
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                if (height > maxHeight) {
+                    width = (width * maxHeight) / height;
+                    height = maxHeight;
+                }
+                
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                
+                // Fond noir
+                tempCtx.fillStyle = '#0a0a12';
+                tempCtx.fillRect(0, 0, width, height);
+                
+                // Dessiner l'image redimensionnée
+                tempCtx.drawImage(canvas, 0, 0, width, height);
+                
+                // Convertir en JPEG avec compression (qualité 0.7 = 70%)
+                const compressedDataUrl = tempCanvas.toDataURL('image/jpeg', 0.7);
+                const base64Image = compressedDataUrl.split(',')[1];
+                
+                // Vérifier la taille
+                const sizeInKb = (base64Image.length * 3 / 4) / 1024;
+                console.log('Taille de l\'image:', sizeInKb.toFixed(2), 'KB');
+                
+                const templateParams = {
+                    to_email: TO_EMAIL,
+                    message: 'Quelqu\'un t\'a envoyé un dessin brouillard !',
+                    image: base64Image,
+                    image_name: `dessin-brouillard-${Date.now()}.jpg`
                 };
                 
-                reader.readAsDataURL(blob);
+                console.log('Envoi en cours...');
+                
+                await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+                
+                loading.classList.remove('show');
+                showNotification('✅ Email envoyé avec succès !');
+                
+                setTimeout(() => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    applyBrushSettings();
+                }, 2000);
                 
             } catch (error) {
                 loading.classList.remove('show');
                 console.error('Erreur:', error);
-                showNotification('❌ Erreur lors de l\'envoi');
+                const errorMsg = error.text || error.message || 'Problème d\'envoi';
+                showNotification('❌ Erreur: ' + errorMsg);
             }
         });
 
         saveBtn.addEventListener('click', async () => {
-            const blob = await createImageBlob();
-            const dataURL = URL.createObjectURL(blob);
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.fillStyle = '#0a0a12';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            const dataURL = tempCanvas.toDataURL('image/png');
             const link = document.createElement('a');
             const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
             link.download = `dessin-brouillard-${timestamp}.png`;
