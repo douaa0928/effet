@@ -82,29 +82,21 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
         }
 
-        #clearBtn {
-            background: rgba(255, 80, 80, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 80, 80, 0.4);
-        }
+        #clearBtn { background: rgba(255, 80, 80, 0.2); color: white; border: 1px solid rgba(255, 80, 80, 0.4); }
         #clearBtn:active { background: rgba(255, 80, 80, 0.5); }
 
-        #saveBtn {
-            background: rgba(80, 255, 120, 0.2);
-            color: white;
-            border: 1px solid rgba(80, 255, 120, 0.4);
-        }
+        #saveBtn { background: rgba(80, 255, 120, 0.2); color: white; border: 1px solid rgba(80, 255, 120, 0.4); }
         #saveBtn:active { background: rgba(80, 255, 120, 0.5); }
 
-        #sendEmailBtn {
-            background: rgba(100, 150, 255, 0.3);
-            color: white;
-            border: 1px solid rgba(100, 150, 255, 0.6);
-        }
+        #sendEmailBtn { background: rgba(100, 150, 255, 0.3); color: white; border: 1px solid rgba(100, 150, 255, 0.6); }
         #sendEmailBtn:active { background: rgba(100, 150, 255, 0.6); }
         
+        #stickerBtn { background: rgba(255, 200, 50, 0.2); color: white; border: 1px solid rgba(255, 200, 50, 0.4); }
+        #stickerBtn:active { background: rgba(255, 200, 50, 0.5); }
+
         #info {
             position: absolute;
             bottom: 20px;
@@ -113,6 +105,7 @@
             color: rgba(255,255,255,0.3);
             font-size: 13px;
             pointer-events: none;
+            z-index: 5;
         }
 
         .notification {
@@ -132,9 +125,7 @@
             text-align: center;
             max-width: 80%;
         }
-        .notification.show {
-            opacity: 1;
-        }
+        .notification.show { opacity: 1; }
 
         .loading {
             position: fixed;
@@ -149,8 +140,74 @@
             z-index: 100;
             display: none;
         }
-        .loading.show {
-            display: block;
+        .loading.show { display: block; }
+
+        /* --- STYLE DU MENU AUTOCOLLANTS --- */
+        #stickerPanel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(20, 20, 30, 0.95);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 15px;
+            z-index: 50;
+            transform: translateY(110%);
+            transition: transform 0.3s ease-out;
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        #stickerPanel.open {
+            transform: translateY(0);
+        }
+
+        .sticker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            color: white;
+        }
+        .sticker-header h3 { margin: 0; font-size: 16px; }
+        .close-stickers {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-height: 40vh;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        .sticker-item {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            overflow: hidden;
+        }
+        .sticker-item:active {
+            transform: scale(0.95);
+            background: rgba(255,255,255,0.2);
+        }
+        .sticker-item img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -169,31 +226,48 @@
             <input type="color" id="colorPicker" value="#d2e6ff">
         </div>
         
-        <button id="sendEmailBtn" class="btn">📧 Envoyer Email</button>
+        <button id="stickerBtn" class="btn">🏷️ Autocollants</button>
+        <button id="sendEmailBtn" class="btn">📧 Envoyer</button>
         <button id="saveBtn" class="btn">💾 Sauvegarder</button>
         <button id="clearBtn" class="btn">🗑️ Effacer</button>
     </div>
 
     <div id="info">Dessine ou écris avec ton doigt ✨</div>
     <div id="notification" class="notification"></div>
-    <div id="loading" class="loading">📤 Envoi en cours...</div>
+    <div id="loading" class="loading"> Envoi en cours...</div>
+
+    <!-- MENU AUTOCOLLANTS -->
+    <div id="stickerPanel">
+        <div class="sticker-header">
+            <h3>✨ Choisis un autocollant</h3>
+            <button class="close-stickers" id="closeStickerBtn">Fermer ✖</button>
+        </div>
+        <div class="sticker-grid" id="stickerGrid">
+            <!-- Les autocollants seront générés ici par le code JS -->
+        </div>
+    </div>
 
     <script type="text/javascript">
-        emailjs.init("2HSpDxAF3uZuAKH-l");
+        // --- CONFIGURATION EMAILJS ---
+        emailjs.init("2HSpDxF3uZuAKH-l");
+        const SERVICE_ID = "service_ctymr5f";
+        const TEMPLATE_ID = "template_wc1x8ag";
+        const TO_EMAIL = "insim5628@gmail.com";
 
+        // --- VARIABLES GLOBALES ---
         const canvas = document.getElementById('fogCanvas');
         const ctx = canvas.getContext('2d');
         const clearBtn = document.getElementById('clearBtn');
         const saveBtn = document.getElementById('saveBtn');
         const sendEmailBtn = document.getElementById('sendEmailBtn');
+        const stickerBtn = document.getElementById('stickerBtn');
+        const stickerPanel = document.getElementById('stickerPanel');
+        const closeStickerBtn = document.getElementById('closeStickerBtn');
+        const stickerGrid = document.getElementById('stickerGrid');
         const sizeSlider = document.getElementById('sizeSlider');
         const colorPicker = document.getElementById('colorPicker');
         const notification = document.getElementById('notification');
         const loading = document.getElementById('loading');
-
-        const SERVICE_ID = "service_ctymr5f";
-        const TEMPLATE_ID = "template_wc1x8ag";
-        const TO_EMAIL = "insim5628@gmail.com";
 
         let isDrawing = false;
         let lastX = 0;
@@ -201,12 +275,36 @@
         let currentSize = 25;
         let currentColorHex = '#d2e6ff';
 
+        // --- AUTOCOLLANTS ---
+        let activeStickerImg = null;
+        let stickerMode = false;
+        
+        // ✅ LISTE DES AUTOCOLLANTS - CHEMINS RELATIFS
+        const stickers = [
+            { name: "d1", url: "douaa1.png" },
+            { name: "dou7", url: "dou7.png" },
+            { name: "dou2", url: "dou2.png" },
+            { name: "dou8", url: "dou8.png" },
+            { name: "dou6", url: "dou6.png" },
+            { name: "dou4", url: "dou4.png" },
+            { name: "dou5", url: "dou5.png" },
+            { name: "dou3", url: "dou3.png" },
+            { name: "lion1", url: "liondou.png" },
+            { name: "lion", url: "liondo.png" },
+        ];
+
+        // Initialisation
+        function init() {
+            resizeCanvas();
+            applyBrushSettings();
+            generateStickerMenu();
+        }
+
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
 
         function hexToRgba(hex, alpha) {
             let r = parseInt(hex.slice(1, 3), 16);
@@ -225,8 +323,6 @@
             ctx.shadowColor = hexToRgba(currentColorHex, 0.9);
         }
 
-        applyBrushSettings();
-
         sizeSlider.addEventListener('input', (e) => {
             currentSize = parseInt(e.target.value);
             applyBrushSettings();
@@ -237,6 +333,81 @@
             applyBrushSettings();
         });
 
+        // --- GESTION DES AUTOCOLLANTS ---
+        function generateStickerMenu() {
+            stickerGrid.innerHTML = '';
+            stickers.forEach((sticker, index) => {
+                const div = document.createElement('div');
+                div.className = 'sticker-item';
+                
+                const img = document.createElement('img');
+                img.src = sticker.url;
+                img.alt = sticker.name;
+                img.crossOrigin = "Anonymous";
+                
+                // Gestion d'erreur si l'image ne charge pas
+                img.onerror = function() {
+                    console.error('Image non trouvée:', sticker.url);
+                    div.style.background = 'rgba(255,0,0,0.2)';
+                    div.innerHTML = '<span style="color: white; font-size: 10px;">❌</span>';
+                };
+                
+                div.appendChild(img);
+                
+                div.addEventListener('click', () => {
+                    selectSticker(img);
+                });
+                
+                stickerGrid.appendChild(div);
+            });
+        }
+
+        function selectSticker(imgElement) {
+            activeStickerImg = imgElement;
+            stickerMode = true;
+            stickerPanel.classList.remove('open');
+            showNotification('📍 Touche l\'écran pour placer !');
+        }
+
+        function placeSticker(x, y) {
+            if (!activeStickerImg || !stickerMode) return;
+
+            const size = 150; // Taille de l'autocollant
+            const ctxBackup = ctx.globalCompositeOperation;
+            const shadowBackup = ctx.shadowBlur;
+            const strokeBackup = ctx.strokeStyle;
+            const shadowColorBackup = ctx.shadowColor;
+
+            // Reset settings for drawing image cleanly
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'transparent';
+
+            // Draw image centered on touch
+            ctx.drawImage(activeStickerImg, x - size/2, y - size/2, size, size);
+
+            // Restore settings
+            ctx.globalCompositeOperation = ctxBackup;
+            ctx.shadowBlur = shadowBackup;
+            ctx.strokeStyle = strokeBackup;
+            ctx.shadowColor = shadowColorBackup;
+
+            stickerMode = false;
+            activeStickerImg = null;
+            showNotification('✅ Autocollant ajouté !');
+        }
+
+        // --- EVENTS AUTOCOLLANTS ---
+        stickerBtn.addEventListener('click', () => {
+            stickerPanel.classList.add('open');
+        });
+
+        closeStickerBtn.addEventListener('click', () => {
+            stickerPanel.classList.remove('open');
+            stickerMode = false;
+        });
+
+        // --- DESSIN ET PLACEMENT ---
         function getPos(e) {
             if (e.touches && e.touches.length > 0) {
                 return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -245,15 +416,23 @@
         }
 
         function startDraw(e) {
-            if (e.target !== canvas) return;
-            isDrawing = true;
+            if (e.target !== canvas && !e.target.classList.contains('sticker-item')) return;
+            
             const pos = getPos(e);
+            
+            // Si mode autocollant actif
+            if (stickerMode) {
+                placeSticker(pos.x, pos.y);
+                return;
+            }
+
+            isDrawing = true;
             [lastX, lastY] = [pos.x, pos.y];
             drawDot(pos.x, pos.y);
         }
 
         function draw(e) {
-            if (!isDrawing) return;
+            if (!isDrawing || stickerMode) return;
             e.preventDefault();
             const pos = getPos(e);
             ctx.beginPath();
@@ -282,73 +461,40 @@
             }, 3000);
         }
 
-        // ENVOYER PAR EMAIL AVEC COMPRESSION
+        // --- EMAIL & SAVE ---
         sendEmailBtn.addEventListener('click', async () => {
             loading.classList.add('show');
-            
             try {
-                // Créer un canvas compressé
                 const tempCanvas = document.createElement('canvas');
                 const tempCtx = tempCanvas.getContext('2d');
-                
-                // Réduire la taille pour rester sous 50KB
                 const maxWidth = 800;
                 const maxHeight = 600;
-                
                 let width = canvas.width;
                 let height = canvas.height;
-                
-                if (width > maxWidth) {
-                    height = (height * maxWidth) / width;
-                    width = maxWidth;
-                }
-                if (height > maxHeight) {
-                    width = (width * maxHeight) / height;
-                    height = maxHeight;
-                }
-                
+                if (width > maxWidth) { height = (height * maxWidth) / width; width = maxWidth; }
+                if (height > maxHeight) { width = (width * maxHeight) / height; height = maxHeight; }
                 tempCanvas.width = width;
                 tempCanvas.height = height;
-                
-                // Fond noir
                 tempCtx.fillStyle = '#0a0a12';
                 tempCtx.fillRect(0, 0, width, height);
-                
-                // Dessiner l'image redimensionnée
                 tempCtx.drawImage(canvas, 0, 0, width, height);
                 
-                // Convertir en JPEG avec compression (qualité 0.7 = 70%)
                 const compressedDataUrl = tempCanvas.toDataURL('image/jpeg', 0.7);
                 const base64Image = compressedDataUrl.split(',')[1];
                 
-                // Vérifier la taille
-                const sizeInKb = (base64Image.length * 3 / 4) / 1024;
-                console.log('Taille de l\'image:', sizeInKb.toFixed(2), 'KB');
-                
                 const templateParams = {
                     to_email: TO_EMAIL,
-                    message: 'Quelqu\'un t\'a envoyé un dessin brouillard !',
+                    message: 'Nouveau dessin brouillard !',
                     image: base64Image,
-                    image_name: `dessin-brouillard-${Date.now()}.jpg`
+                    image_name: `dessin-${Date.now()}.jpg`
                 };
                 
-                console.log('Envoi en cours...');
-                
                 await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
-                
                 loading.classList.remove('show');
-                showNotification('✅ Email envoyé avec succès !');
-                
-                setTimeout(() => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    applyBrushSettings();
-                }, 2000);
-                
+                showNotification('✅ Email envoyé !');
             } catch (error) {
                 loading.classList.remove('show');
-                console.error('Erreur:', error);
-                const errorMsg = error.text || error.message || 'Problème d\'envoi';
-                showNotification('❌ Erreur: ' + errorMsg);
+                showNotification('❌ Erreur: ' + (error.text || error.message));
             }
         });
 
@@ -360,35 +506,35 @@
             tempCtx.fillStyle = '#0a0a12';
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
             tempCtx.drawImage(canvas, 0, 0);
-            
             const dataURL = tempCanvas.toDataURL('image/png');
             const link = document.createElement('a');
-            const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
-            link.download = `dessin-brouillard-${timestamp}.png`;
+            link.download = `dessin-brouillard-${Date.now()}.png`;
             link.href = dataURL;
             link.click();
-            
-            showNotification('✅ Dessin sauvegardé !');
+            showNotification('✅ Sauvegardé !');
         });
 
         clearBtn.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             applyBrushSettings();
-            showNotification('🗑️ Dessin effacé');
+            showNotification('🗑️ Effacé');
         });
 
-        clearBtn.addEventListener('touchstart', (e) => e.stopPropagation());
-        saveBtn.addEventListener('touchstart', (e) => e.stopPropagation());
-        sendEmailBtn.addEventListener('touchstart', (e) => e.stopPropagation());
-
+        // Touch listeners
         canvas.addEventListener('mousedown', startDraw);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', endDraw);
         canvas.addEventListener('mouseout', endDraw);
-
         canvas.addEventListener('touchstart', startDraw);
         canvas.addEventListener('touchmove', draw);
         canvas.addEventListener('touchend', endDraw);
+
+        // Prevent button clicks from drawing
+        document.querySelectorAll('.btn, .sticker-item, .close-stickers, input').forEach(el => {
+            el.addEventListener('touchstart', (e) => e.stopPropagation());
+        });
+
+        init();
     </script>
 </body>
 </html>
