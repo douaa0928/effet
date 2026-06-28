@@ -160,132 +160,111 @@
     <div id="notification" class="notification"></div>
 
     <script>
-        const canvas = document.getElementById('fogCanvas');
-        const ctx = canvas.getContext('2d');
-        const clearBtn = document.getElementById('clearBtn');
-        const saveBtn = document.getElementById('saveBtn');
-        const shareBtn = document.getElementById('shareBtn');
-        const sizeSlider = document.getElementById('sizeSlider');
-        const colorPicker = document.getElementById('colorPicker');
-        const notification = document.getElementById('notification');
+    const canvas = document.getElementById('fogCanvas');
+    const ctx = canvas.getContext('2d');
+    const clearBtn = document.getElementById('clearBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const configBtn = document.getElementById('configBtn');
+    const sizeSlider = document.getElementById('sizeSlider');
+    const colorPicker = document.getElementById('colorPicker');
+    const notification = document.getElementById('notification');
+    const configModal = document.getElementById('configModal');
+    const phoneInput = document.getElementById('phoneInput');
+    const savePhoneBtn = document.getElementById('savePhoneBtn');
 
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-        let currentSize = 25;
-        let currentColorHex = '#d2e6ff';
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentSize = 25;
+    let currentColorHex = '#d2e6ff';
+    
+    // ✅ CORRECTION ICI : Ton numéro est la valeur par défaut
+    let whatsappNumber = localStorage.getItem('whatsappNumber') || '213699043725';
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-        function hexToRgba(hex, alpha) {
-            let r = parseInt(hex.slice(1, 3), 16);
-            let g = parseInt(hex.slice(3, 5), 16);
-            let b = parseInt(hex.slice(5, 7), 16);
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        }
+    function hexToRgba(hex, alpha) {
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
 
-        function applyBrushSettings() {
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.lineWidth = currentSize;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.strokeStyle = hexToRgba(currentColorHex, 0.35);
-            ctx.shadowBlur = currentSize * 0.8;
-            ctx.shadowColor = hexToRgba(currentColorHex, 0.9);
-        }
+    function applyBrushSettings() {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineWidth = currentSize;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = hexToRgba(currentColorHex, 0.35);
+        ctx.shadowBlur = currentSize * 0.8;
+        ctx.shadowColor = hexToRgba(currentColorHex, 0.9);
+    }
 
+    applyBrushSettings();
+
+    sizeSlider.addEventListener('input', (e) => {
+        currentSize = parseInt(e.target.value);
         applyBrushSettings();
+    });
 
-        sizeSlider.addEventListener('input', (e) => {
-            currentSize = parseInt(e.target.value);
-            applyBrushSettings();
-        });
+    colorPicker.addEventListener('input', (e) => {
+        currentColorHex = e.target.value;
+        applyBrushSettings();
+    });
 
-        colorPicker.addEventListener('input', (e) => {
-            currentColorHex = e.target.value;
-            applyBrushSettings();
-        });
-
-        function getPos(e) {
-            if (e.touches && e.touches.length > 0) {
-                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }
-            return { x: e.clientX, y: e.clientY };
+    function getPos(e) {
+        if (e.touches && e.touches.length > 0) {
+            return { x: e.touches[0].clientX, y: e.touches[0].clientY };
         }
+        return { x: e.clientX, y: e.clientY };
+    }
 
-        function startDraw(e) {
-            if (e.target !== canvas) return;
-            isDrawing = true;
-            const pos = getPos(e);
-            [lastX, lastY] = [pos.x, pos.y];
-            drawDot(pos.x, pos.y);
-        }
+    function startDraw(e) {
+        if (e.target !== canvas) return;
+        isDrawing = true;
+        const pos = getPos(e);
+        [lastX, lastY] = [pos.x, pos.y];
+        drawDot(pos.x, pos.y);
+    }
 
-        function draw(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
-            const pos = getPos(e);
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-            [lastX, lastY] = [pos.x, pos.y];
-        }
+    function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        [lastX, lastY] = [pos.x, pos.y];
+    }
 
-        function drawDot(x, y) {
-            ctx.beginPath();
-            ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
-            ctx.fillStyle = ctx.strokeStyle;
-            ctx.fill();
-        }
+    function drawDot(x, y) {
+        ctx.beginPath();
+        ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.fill();
+    }
 
-        function endDraw() {
-            isDrawing = false;
-        }
+    function endDraw() {
+        isDrawing = false;
+    }
 
-        // Afficher une notification
-        function showNotification(message) {
-            notification.textContent = message;
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 2000);
-        }
+    function showNotification(message) {
+        notification.textContent = message;
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 2500);
+    }
 
-        // SAUVEGARDER le dessin
-        saveBtn.addEventListener('click', () => {
-            // Créer un canvas temporaire avec fond noir
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            // Fond noir
-            tempCtx.fillStyle = '#0a0a12';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            
-            // Dessiner le canvas original dessus
-            tempCtx.drawImage(canvas, 0, 0);
-            
-            // Convertir en image et télécharger
-            const dataURL = tempCanvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
-            link.download = `dessin-brouillard-${timestamp}.png`;
-            link.href = dataURL;
-            link.click();
-            
-            showNotification('✅ Dessin sauvegardé !');
-        });
-
-        // PARTAGER le dessin
-        shareBtn.addEventListener('click', async () => {
-            // Créer un canvas temporaire avec fond noir
+    function createImageBlob() {
+        return new Promise((resolve) => {
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width;
             tempCanvas.height = canvas.height;
@@ -295,56 +274,90 @@
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
             tempCtx.drawImage(canvas, 0, 0);
             
-            // Convertir en blob
-            tempCanvas.toBlob(async (blob) => {
-                const file = new File([blob], `dessin-brouillard.png`, { type: 'image/png' });
-                
-                // Vérifier si le partage est supporté
-                if (navigator.share && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            title: 'Mon dessin brouillard',
-                            text: 'Regarde mon dessin !',
-                            files: [file]
-                        });
-                        showNotification('📤 Dessin partagé !');
-                    } catch (err) {
-                        if (err.name !== 'AbortError') {
-                            console.error('Erreur de partage:', err);
-                            showNotification('❌ Erreur lors du partage');
-                        }
-                    }
-                } else {
-                    // Fallback : télécharger si le partage n'est pas supporté
-                    const dataURL = tempCanvas.toDataURL('image/png');
-                    const link = document.createElement('a');
-                    link.download = `dessin-brouillard.png`;
-                    link.href = dataURL;
-                    link.click();
-                    showNotification('💾 Télécharger pour partager');
-                }
+            tempCanvas.toBlob((blob) => {
+                resolve(blob);
             }, 'image/png');
         });
+    }
 
-        // EFFACER
-        clearBtn.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            applyBrushSettings();
-            showNotification('🗑️ Dessin effacé');
-        });
+    configBtn.addEventListener('click', () => {
+        phoneInput.value = whatsappNumber;
+        configModal.classList.add('show');
+    });
 
-        clearBtn.addEventListener('touchstart', (e) => e.stopPropagation());
-        saveBtn.addEventListener('touchstart', (e) => e.stopPropagation());
-        shareBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+    savePhoneBtn.addEventListener('click', () => {
+        const number = phoneInput.value.replace(/[\s\-\+]/g, '');
+        if (number && number.length >= 10) {
+            whatsappNumber = number;
+            localStorage.setItem('whatsappNumber', number);
+            configModal.classList.remove('show');
+            showNotification('✅ Numéro enregistré !');
+        } else {
+            showNotification('❌ Numéro invalide');
+        }
+    });
 
-        canvas.addEventListener('mousedown', startDraw);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', endDraw);
-        canvas.addEventListener('mouseout', endDraw);
+    sendBtn.addEventListener('click', async () => {
+        if (!whatsappNumber) {
+            showNotification('⚙️ Configure ton numéro d\'abord !');
+            setTimeout(() => configModal.classList.add('show'), 2000);
+            return;
+        }
 
-        canvas.addEventListener('touchstart', startDraw);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', endDraw);
-    </script>
+        const blob = await createImageBlob();
+        const dataURL = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
+        link.download = `dessin-brouillard-${timestamp}.png`;
+        link.href = dataURL;
+        link.click();
+
+        setTimeout(() => {
+            const message = encodeURIComponent('Regarde mon dessin ! 🎨✨ (L\'image vient d\'être téléchargée)');
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${message}`;
+            window.open(whatsappURL, '_blank');
+            
+            showNotification('📱 Image téléchargée !\nJoins-la dans WhatsApp');
+        }, 500);
+    });
+
+    saveBtn.addEventListener('click', async () => {
+        const blob = await createImageBlob();
+        const dataURL = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
+        link.download = `dessin-brouillard-${timestamp}.png`;
+        link.href = dataURL;
+        link.click();
+        
+        showNotification('✅ Dessin sauvegardé !');
+    });
+
+    clearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        applyBrushSettings();
+        showNotification('🗑️ Dessin effacé');
+    });
+
+    clearBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+    saveBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+    sendBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+    configBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseout', endDraw);
+
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', endDraw);
+
+    if (!whatsappNumber) {
+        setTimeout(() => {
+            showNotification('⚙️ Clique sur "Config" pour ajouter ton numéro WhatsApp');
+        }, 1000);
+    }
+</script>
 </body>
 </html>
