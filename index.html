@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dessiner avec du Brouillard</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -97,12 +98,12 @@
         }
         #saveBtn:active { background: rgba(80, 255, 120, 0.5); }
 
-        #sendBtn {
-            background: rgba(37, 211, 102, 0.3);
+        #sendEmailBtn {
+            background: rgba(100, 150, 255, 0.3);
             color: white;
-            border: 1px solid rgba(37, 211, 102, 0.6);
+            border: 1px solid rgba(100, 150, 255, 0.6);
         }
-        #sendBtn:active { background: rgba(37, 211, 102, 0.6); }
+        #sendEmailBtn:active { background: rgba(100, 150, 255, 0.6); }
         
         #info {
             position: absolute;
@@ -134,6 +135,23 @@
         .notification.show {
             opacity: 1;
         }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            z-index: 100;
+            display: none;
+        }
+        .loading.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -151,30 +169,39 @@
             <input type="color" id="colorPicker" value="#d2e6ff">
         </div>
         
-        <button id="sendBtn" class="btn">📱 WhatsApp</button>
+        <button id="sendEmailBtn" class="btn">📧 Envoyer Email</button>
         <button id="saveBtn" class="btn">💾 Sauvegarder</button>
         <button id="clearBtn" class="btn">🗑️ Effacer</button>
     </div>
 
     <div id="info">Dessine ou écris avec ton doigt ✨</div>
     <div id="notification" class="notification"></div>
+    <div id="loading" class="loading">📤 Envoi en cours...</div>
 
-    <script>
+    <script type="text/javascript">
+        // ✅ INITIALISER EMAILJS AVEC TA CLÉ PUBLIQUE
+        emailjs.init("2HSpDxAF3uZuAKH-l"); // Remplace par ta Public Key EmailJS
+
         const canvas = document.getElementById('fogCanvas');
         const ctx = canvas.getContext('2d');
         const clearBtn = document.getElementById('clearBtn');
         const saveBtn = document.getElementById('saveBtn');
-        const sendBtn = document.getElementById('sendBtn');
+        const sendEmailBtn = document.getElementById('sendEmailBtn');
         const sizeSlider = document.getElementById('sizeSlider');
         const colorPicker = document.getElementById('colorPicker');
         const notification = document.getElementById('notification');
+        const loading = document.getElementById('loading');
+
+        // ✅ CONFIGURATION EMAIL
+        const SERVICE_ID = "service_ctymr5f"; // Remplace par ton Service ID
+        const TEMPLATE_ID = "lou"; // Remplace par ton Template ID
+        const TO_EMAIL = "insim5628@gmail.com"; // Remplace par ton email de réception
 
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
         let currentSize = 25;
         let currentColorHex = '#d2e6ff';
-        let whatsappNumber = '213699043725';
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -254,7 +281,7 @@
             notification.classList.add('show');
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 2500);
+            }, 3000);
         }
 
         function createImageBlob() {
@@ -274,22 +301,43 @@
             });
         }
 
-        sendBtn.addEventListener('click', async () => {
-            const blob = await createImageBlob();
-            const dataURL = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
-            link.download = `dessin-brouillard-${timestamp}.png`;
-            link.href = dataURL;
-            link.click();
-
-            setTimeout(() => {
-                const message = encodeURIComponent('Regarde mon dessin ! 🎨✨');
-                const whatsappURL = `https://wa.me/${whatsappNumber}?text=${message}`;
-                window.open(whatsappURL, '_blank');
+        // ENVOYER PAR EMAIL
+        sendEmailBtn.addEventListener('click', async () => {
+            loading.classList.add('show');
+            
+            try {
+                const blob = await createImageBlob();
+                const reader = new FileReader();
                 
-                showNotification('📱 Image téléchargée !\nJoins-la dans WhatsApp');
-            }, 500);
+                reader.onloadend = async function() {
+                    const base64Image = reader.result.split(',')[1]; // Extraire juste la partie base64
+                    
+                    const templateParams = {
+                        to_email: TO_EMAIL,
+                        message: 'Quelqu\'un t\'a envoyé un dessin brouillard !',
+                        image: base64Image,
+                        image_name: `dessin-brouillard-${Date.now()}.png`
+                    };
+                    
+                    await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+                    
+                    loading.classList.remove('show');
+                    showNotification('✅ Email envoyé avec succès !');
+                    
+                    // Effacer le canvas après envoi
+                    setTimeout(() => {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        applyBrushSettings();
+                    }, 2000);
+                };
+                
+                reader.readAsDataURL(blob);
+                
+            } catch (error) {
+                loading.classList.remove('show');
+                console.error('Erreur:', error);
+                showNotification('❌ Erreur lors de l\'envoi');
+            }
         });
 
         saveBtn.addEventListener('click', async () => {
@@ -312,7 +360,7 @@
 
         clearBtn.addEventListener('touchstart', (e) => e.stopPropagation());
         saveBtn.addEventListener('touchstart', (e) => e.stopPropagation());
-        sendBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+        sendEmailBtn.addEventListener('touchstart', (e) => e.stopPropagation());
 
         canvas.addEventListener('mousedown', startDraw);
         canvas.addEventListener('mousemove', draw);
