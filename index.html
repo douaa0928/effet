@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <!-- Empêche le zoom et le scroll sur mobile pendant qu'on dessine -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dessiner avec du Brouillard</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            /* Fond très sombre pour que le brouillard blanc ressorte bien */
+            background: #0a0a12; 
+            touch-action: none; 
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Bouton pour tout effacer et recommencer */
+        #clearBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Petit texte d'instruction */
+        #info {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255,255,255,0.4);
+            font-family: sans-serif;
+            font-size: 14px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="fogCanvas"></canvas>
+    <button id="clearBtn">Effacer</button>
+    <div id="info">Dessine ou écris avec ton doigt ✨</div>
+
+    <script>
+        const canvas = document.getElementById('fogCanvas');
+        const ctx = canvas.getContext('2d');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Ajuster la taille du canvas à l'écran
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Configurer le "pinceau de brouillard"
+        function setupFogBrush() {
+            ctx.globalCompositeOperation = 'source-over';
+            // Couleur blanc-bleuté très transparent (comme de la vraie buée)
+            ctx.strokeStyle = 'rgba(210, 230, 255, 0.25)'; 
+            ctx.lineWidth = 60; // Épaisseur du doigt
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // L'astuce magique pour l'effet flou/vaporeux :
+            ctx.shadowBlur = 30; 
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+        }
+
+        setupFogBrush();
+
+        // Récupérer la position du doigt ou de la souris
+        function getPos(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        // Commencer à dessiner
+        function startDraw(e) {
+            isDrawing = true;
+            const pos = getPos(e);
+            [lastX, lastY] = [pos.x, pos.y];
+            
+            // Faire un petit point au début pour qu'on voie où on a touché
+            drawDot(pos.x, pos.y);
+        }
+
+        // Dessiner la trace de brouillard
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); // Empêche le téléphone de scroller
+
+            const pos = getPos(e);
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+
+            [lastX, lastY] = [pos.x, pos.y];
+        }
+
+        // Faire un point (pour le début du trait)
+        function drawDot(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function endDraw() {
+            isDrawing = false;
+        }
+
+        // Effacer tout l'écran
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            setupFogBrush(); // Réappliquer les styles au cas où
+        });
+        // Empêcher le bouton de déclencher le dessin
+        clearBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+
+        // Écouteurs pour la souris (PC)
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', endDraw);
+        canvas.addEventListener('mouseout', endDraw);
+
+        // Écouteurs pour le tactile (Téléphone)
+        canvas.addEventListener('touchstart', startDraw);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', endDraw);
+    </script>
+</body>
+</html>
