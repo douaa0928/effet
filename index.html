@@ -27,18 +27,19 @@
             transform: translateX(-50%);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
             background: rgba(30, 30, 45, 0.7);
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 25px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             z-index: 20;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: center;
             max-width: 95%;
         }
+        .toolbar .tool-label { display: inline; }
         .tool-group {
             display: flex;
             align-items: center;
@@ -424,6 +425,89 @@
         .camera-gallery-btn span {
             font-size: 24px;
         }
+
+        /* ============================================================
+         * ✅✅✅ SUPPRIMER photo de la galerie
+         * Petit bouton X rouge en haut à droite de chaque sticker galerie
+         * ============================================================ */
+        .delete-sticker-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255, 50, 50, 0.85);
+            color: white;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            line-height: 1;
+            padding: 0;
+            transition: transform 0.15s, background 0.15s;
+        }
+        .delete-sticker-btn:active {
+            transform: scale(1.2);
+            background: rgba(255, 50, 50, 1);
+        }
+
+        /* ============================================================
+         * ✅✅✅ MODE MOBILE : toolbar tout en une seule ligne horizontale
+         * On cache les labels texte, on réduit les éléments
+         * pour libérer un max d'espace de dessin
+         * ============================================================ */
+        @media (max-width: 600px) {
+            .toolbar {
+                flex-wrap: nowrap !important;
+                gap: 3px !important;
+                padding: 4px 6px !important;
+                top: 6px !important;
+                max-width: 99% !important;
+                border-radius: 18px !important;
+            }
+            /* Cache les labels texte + texte des boutons */
+            .toolbar .tool-label {
+                display: none !important;
+            }
+            .btn-text {
+                display: none !important;
+            }
+            .tool-group {
+                gap: 3px !important;
+            }
+            /* Boutons très compacts */
+            .toolbar .btn {
+                padding: 4px 6px !important;
+                font-size: 10px !important;
+                border-radius: 12px !important;
+            }
+            /* Slider tout petit */
+            #sizeSlider {
+                width: 35px !important;
+            }
+            /* Color picker mini */
+            #colorPicker {
+                width: 20px !important;
+                height: 20px !important;
+            }
+            /* Cache le texte dans les boutons de la toolbar */
+            .toolbar .btn {
+                white-space: nowrap !important;
+            }
+            /* Info en bas plus discret */
+            #info {
+                font-size: 11px !important;
+                bottom: 10px !important;
+            }
+            /* Panneau stickers moins haut sur mobile */
+            .sticker-grid {
+                max-height: 35vh !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -443,12 +527,12 @@
          * ✅✅✅ NOUVEAU : Bouton caméra directe dans la toolbar
          * Accès rapide pour se prendre en photo sans ouvrir le panneau
          * ============================================================ -->
-        <button id="cameraBtn" class="btn">📸 Photo</button>
+        <button id="cameraBtn" class="btn"><span class="btn-icon">📸</span><span class="btn-text">Photo</span></button>
 
-        <button id="stickerBtn" class="btn">🏷️ Autocollants</button>
-        <button id="sendEmailBtn" class="btn">📧 Envoyer</button>
-        <button id="saveBtn" class="btn">💾 Sauvegarder</button>
-        <button id="clearBtn" class="btn">🗑️ Effacer</button>
+        <button id="stickerBtn" class="btn"><span class="btn-icon">🏷️</span><span class="btn-text">Stickers</span></button>
+        <button id="sendEmailBtn" class="btn"><span class="btn-icon">📧</span><span class="btn-text">Envoyer</span></button>
+        <button id="saveBtn" class="btn"><span class="btn-icon">💾</span><span class="btn-text">Sauver</span></button>
+        <button id="clearBtn" class="btn"><span class="btn-icon">🗑️</span><span class="btn-text">Effacer</span></button>
     </div>
     <div id="info">Dessine ou écris avec ton doigt ✨</div>
     <div id="notification" class="notification"></div>
@@ -971,6 +1055,25 @@
             badge.textContent = 'Moi';
             div.appendChild(img);
             div.appendChild(badge);
+
+            // ============================================================
+            // ✅✅✅ NOUVEAU : Bouton supprimer (X rouge) pour chaque photo
+            // Supprime le sticker de la galerie et du DOM
+            // ============================================================
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-sticker-btn';
+            deleteBtn.textContent = '✕';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Empêche de sélectionner le sticker
+                // Supprime du DOM
+                div.remove();
+                // Supprime de la galerie en mémoire
+                const index = galleryStickers.indexOf(stickerData);
+                if (index > -1) galleryStickers.splice(index, 1);
+                showNotification('🗑️ Photo supprimée !');
+            });
+            div.appendChild(deleteBtn);
+
             div.addEventListener('click', () => {
                 selectGallerySticker(img);
             });
