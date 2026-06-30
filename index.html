@@ -10,18 +10,16 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background: #0a0a12; 
-            touch-action: none; 
+            background: #0a0a12;
+            touch-action: none;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
             font-family: sans-serif;
         }
-
         canvas {
             display: block;
         }
-
         .toolbar {
             position: absolute;
             top: 15px;
@@ -41,24 +39,20 @@
             justify-content: center;
             max-width: 95%;
         }
-
         .tool-group {
             display: flex;
             align-items: center;
             gap: 5px;
         }
-
         .tool-label {
             color: rgba(255,255,255,0.7);
             font-size: 11px;
         }
-
         #sizeSlider {
             width: 60px;
             accent-color: #00d2ff;
             cursor: pointer;
         }
-
         #colorPicker {
             width: 25px;
             height: 25px;
@@ -71,7 +65,6 @@
         }
         #colorPicker::-webkit-color-swatch-wrapper { padding: 0; }
         #colorPicker::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; }
-
         .btn {
             padding: 6px 10px;
             border: none;
@@ -84,29 +77,14 @@
             gap: 4px;
             white-space: nowrap;
         }
-
         #clearBtn { background: rgba(255, 80, 80, 0.2); color: white; border: 1px solid rgba(255, 80, 80, 0.4); }
         #clearBtn:active { background: rgba(255, 80, 80, 0.5); }
-
         #saveBtn { background: rgba(80, 255, 120, 0.2); color: white; border: 1px solid rgba(80, 255, 120, 0.4); }
         #saveBtn:active { background: rgba(80, 255, 120, 0.5); }
-
         #sendEmailBtn { background: rgba(100, 150, 255, 0.3); color: white; border: 1px solid rgba(100, 150, 255, 0.6); }
         #sendEmailBtn:active { background: rgba(100, 150, 255, 0.6); }
-        
         #stickerBtn { background: rgba(255, 200, 50, 0.2); color: white; border: 1px solid rgba(255, 200, 50, 0.4); }
         #stickerBtn:active { background: rgba(255, 200, 50, 0.5); }
-
-        #galleryBtn { background: rgba(200, 100, 255, 0.2); color: white; border: 1px solid rgba(200, 100, 255, 0.4); }
-        #galleryBtn:active { background: rgba(200, 100, 255, 0.5); }
-
-        #emojiBtn { background: rgba(255, 150, 50, 0.2); color: white; border: 1px solid rgba(255, 150, 50, 0.4); }
-        #emojiBtn:active { background: rgba(255, 150, 50, 0.5); }
-
-        /* ✅ NOUVEAU : Style bouton Selfie */
-        #selfieBtn { background: rgba(255, 80, 180, 0.25); color: white; border: 1px solid rgba(255, 80, 180, 0.5); }
-        #selfieBtn:active { background: rgba(255, 80, 180, 0.6); }
-
         #info {
             position: absolute;
             bottom: 20px;
@@ -117,7 +95,6 @@
             pointer-events: none;
             z-index: 5;
         }
-
         .notification {
             position: fixed;
             top: 50%;
@@ -136,7 +113,6 @@
             max-width: 80%;
         }
         .notification.show { opacity: 1; }
-
         .loading {
             position: fixed;
             top: 50%;
@@ -151,8 +127,6 @@
             display: none;
         }
         .loading.show { display: block; }
-
-        /* --- STYLE DU MENU AUTOCOLLANTS --- */
         #stickerPanel {
             position: fixed;
             bottom: 0;
@@ -171,7 +145,6 @@
         #stickerPanel.open {
             transform: translateY(0);
         }
-
         .sticker-header {
             display: flex;
             justify-content: space-between;
@@ -188,7 +161,6 @@
             border-radius: 15px;
             cursor: pointer;
         }
-
         .sticker-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -197,7 +169,6 @@
             overflow-y: auto;
             padding-bottom: 20px;
         }
-
         .sticker-item {
             aspect-ratio: 1;
             background: rgba(255,255,255,0.05);
@@ -208,7 +179,6 @@
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
             overflow: hidden;
-            position: relative;
         }
         .sticker-item:active {
             transform: scale(0.95);
@@ -220,374 +190,397 @@
             object-fit: contain;
             pointer-events: none;
         }
-
-        #emojiPanel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(20, 20, 30, 0.95);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding: 15px;
-            z-index: 50;
-            transform: translateY(110%);
-            transition: transform 0.3s ease-out;
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        #emojiPanel.open {
-            transform: translateY(0);
-        }
-
-        .emoji-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
-            max-height: 45vh;
-            overflow-y: auto;
-            padding-bottom: 20px;
-        }
-
-        .emoji-item {
-            aspect-ratio: 1;
+        .sticker-item.emoji-sticker {
+            font-size: 40px;
             background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 32px;
-            transition: transform 0.2s, background 0.2s;
-        }
-        .emoji-item:active {
-            transform: scale(0.9);
-            background: rgba(255,255,255,0.2);
-        }
-
-        .sticker-size-control {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            color: white;
-            font-size: 12px;
-        }
-        .sticker-size-control input[type="range"] {
-            flex: 1;
-            accent-color: #ff9933;
         }
 
         /* ============================================================
-           ✅ NOUVEAU : OVERLAY APPAREIL PHOTO (SELFIE)
-           - Plein écran
-           - Video en direct
-           - Boutons : fermer, switch caméra, capturer
-           - Preview après capture avec boutons : refaire, valider
-           ============================================================ */
-        #cameraOverlay {
+         * ✅✅✅ Styles pour les onglets du panneau stickers
+         * ============================================================ */
+        .sticker-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .sticker-tab {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .sticker-tab.active {
+            background: rgba(100, 150, 255, 0.3);
+            color: white;
+            border: 1px solid rgba(100, 150, 255, 0.5);
+        }
+        .sticker-tab:active {
+            transform: scale(0.95);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ============================================================
+         * ✅✅✅ Styles pour le bouton d'upload de galerie
+         * ============================================================ */
+        .upload-gallery-btn {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .upload-gallery-btn:active {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .upload-gallery-btn span {
+            font-size: 24px;
+        }
+
+        /* ============================================================
+         * ✅✅✅ Styles pour la taille des emojis
+         * ============================================================ */
+        .emoji-size-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .emoji-size-control label {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .emoji-size-control input[type="range"] {
+            flex: 1;
+            accent-color: #ff9900;
+        }
+
+        /* ============================================================
+         * ✅✅✅ Styles pour les images de galerie dans la grille
+         * ============================================================ */
+        .sticker-item.gallery-item {
+            position: relative;
+        }
+        .gallery-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: rgba(0, 150, 255, 0.8);
+            color: white;
+            font-size: 8px;
+            padding: 2px 4px;
+            border-radius: 5px;
+        }
+
+        /* ============================================================
+         * ✅✅✅ NOUVEAU : Styles pour l'option Photo / Caméra
+         * Panneau de prise de photo plein écran avec aperçu live
+         * Boutons : selfie 🤳, caméra arrière 📸, valider ✅, annuler ❌
+         * ============================================================ */
+        #cameraPanel {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: black;
+            background: #000;
             z-index: 200;
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
-        #cameraOverlay.show {
+        #cameraPanel.open {
             display: flex;
         }
-
         #cameraVideo {
             width: 100%;
-            height: 100%;
+            max-width: 500px;
+            aspect-ratio: 3/4;
             object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        /* ✅ NOUVEAU : Flash blanc lors de la capture */
-        #cameraFlash {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 202;
-            transition: opacity 0.3s;
-        }
-        #cameraFlash.flash {
-            opacity: 1;
-        }
-
-        /* ✅ NOUVEAU : Preview de la photo capturée */
-        #cameraPreview {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: none;
-            z-index: 201;
-            background: black;
-        }
-
-        /* ✅ NOUVEAU : Barre supérieure de la caméra */
-        .camera-top-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 15px;
-            padding-top: max(15px, env(safe-area-inset-top));
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 203;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
-        }
-
-        .camera-close-btn {
-            background: rgba(0,0,0,0.5);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .camera-title {
-            color: white;
-            font-size: 14px;
-            background: rgba(0,0,0,0.5);
-            padding: 6px 12px;
             border-radius: 15px;
+            background: #111;
         }
-
-        .camera-switch-btn {
-            background: rgba(0,0,0,0.5);
-            border: none;
+        #cameraCanvas {
+            display: none; /* canvas caché pour capturer la photo */
+        }
+        .camera-controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            align-items: center;
+        }
+        .camera-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.15);
             color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 20px;
+            font-size: 28px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
         }
-
-        /* ✅ NOUVEAU : Barre inférieure de la caméra */
-        .camera-bottom-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 30px;
-            padding-bottom: max(30px, env(safe-area-inset-bottom));
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            z-index: 203;
-            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-        }
-
-        /* ✅ NOUVEAU : Gros bouton capture (style iOS) */
-        .capture-btn {
-            width: 75px;
-            height: 75px;
-            border-radius: 50%;
-            background: white;
-            border: 5px solid rgba(255,255,255,0.5);
-            box-shadow: 0 0 0 4px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .capture-btn:active {
+        .camera-btn:active {
             transform: scale(0.9);
         }
-
-        /* ✅ NOUVEAU : Boutons de validation après capture */
-        .camera-confirm-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 30px;
-            padding-bottom: max(30px, env(safe-area-inset-bottom));
-            display: none;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 203;
-            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+        .camera-btn.capture {
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 50, 50, 0.8);
+            border-color: rgba(255, 100, 100, 0.9);
+            font-size: 32px;
         }
-        .camera-confirm-bar.show {
-            display: flex;
+        .camera-btn.capture:active {
+            background: rgba(255, 50, 50, 1);
         }
-
-        .camera-action-btn {
-            background: rgba(0,0,0,0.5);
-            border: 2px solid white;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .camera-action-btn.primary {
-            background: white;
-            color: black;
-        }
-
-        /* ✅ NOUVEAU : Message d'erreur caméra */
-        .camera-error {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
+        .camera-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
             text-align: center;
-            padding: 20px;
-            display: none;
-            z-index: 204;
-            max-width: 80%;
+            margin-top: 5px;
         }
-        .camera-error.show {
+        .camera-btn-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* Preview après prise de photo */
+        #photoPreview {
+            display: none;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 3/4;
+            object-fit: contain;
+            border-radius: 15px;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+        #photoPreview.visible {
             display: block;
         }
-        .camera-error h3 {
-            margin: 0 0 10px 0;
-            font-size: 18px;
+        #cameraVideo.hidden {
+            display: none;
         }
-        .camera-error p {
-            margin: 0 0 15px 0;
-            opacity: 0.7;
-            font-size: 13px;
+        /* Bouton caméra dans la toolbar */
+        #cameraBtn {
+            background: rgba(255, 100, 200, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 100, 200, 0.4);
         }
-        .camera-error button {
-            background: white;
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+        #cameraBtn:active {
+            background: rgba(255, 100, 200, 0.5);
+        }
+
+        /* ============================================================
+         * ✅✅✅ NOUVEAU : Bouton caméra direct dans l'onglet Galerie
+         * ============================================================ */
+        .camera-gallery-btn {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 100, 200, 0.5);
+            border-radius: 10px;
+            background: rgba(255, 100, 200, 0.15);
+            color: rgba(255,255,255,0.9);
             cursor: pointer;
             font-size: 14px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .camera-gallery-btn:active {
+            background: rgba(255, 100, 200, 0.4);
+            border-color: rgba(255, 100, 200, 0.8);
+        }
+        .camera-gallery-btn span {
+            font-size: 24px;
         }
     </style>
 </head>
 <body>
-
     <canvas id="fogCanvas"></canvas>
-
     <div class="toolbar">
         <div class="tool-group">
             <span class="tool-label">Taille</span>
             <input type="range" id="sizeSlider" min="5" max="120" value="25">
         </div>
-        
+
         <div class="tool-group">
             <span class="tool-label">Couleur</span>
             <input type="color" id="colorPicker" value="#d2e6ff">
         </div>
-        
+
+        <!-- ============================================================
+         * ✅✅✅ NOUVEAU : Bouton caméra directe dans la toolbar
+         * Accès rapide pour se prendre en photo sans ouvrir le panneau
+         * ============================================================ -->
+        <button id="cameraBtn" class="btn">📸 Photo</button>
+
         <button id="stickerBtn" class="btn">🏷️ Autocollants</button>
-        <button id="galleryBtn" class="btn">🖼️ Galerie</button>
-        <button id="emojiBtn" class="btn">😀 Emoji</button>
-        <button id="selfieBtn" class="btn">📷 Selfie</button>
         <button id="sendEmailBtn" class="btn">📧 Envoyer</button>
         <button id="saveBtn" class="btn">💾 Sauvegarder</button>
         <button id="clearBtn" class="btn">🗑️ Effacer</button>
     </div>
-
-    <input type="file" id="galleryInput" accept="image/*" multiple style="display:none;">
-
     <div id="info">Dessine ou écris avec ton doigt ✨</div>
     <div id="notification" class="notification"></div>
     <div id="loading" class="loading"> Envoi en cours...</div>
 
-    <!-- MENU AUTOCOLLANTS -->
+    <!-- ============================================================
+     * ✅✅✅ NOUVEAU : PANNEAU CAMÉRA / PHOTO
+     * Interface plein écran pour prendre des photos
+     * Avec bouton selfie 🤳 (caméra avant) et caméra arrière 📸
+     * Aperçu après la prise de photo pour valider ou recommencer
+     * ============================================================ -->
+    <div id="cameraPanel">
+        <video id="cameraVideo" autoplay playsinline></video>
+        <canvas id="cameraCanvas"></canvas>
+        <img id="photoPreview" alt="Aperçu de la photo">
+
+        <div class="camera-controls" id="cameraControls">
+            <!-- ============================================================
+             * ✅✅✅ NOUVEAU : Bouton Selfie (caméra avant)
+             * facingMode: "user" = caméra frontale pour les selfies
+             * ============================================================ -->
+            <div class="camera-btn-wrapper">
+                <button class="camera-btn" id="selfieBtn">🤳</button>
+                <div class="camera-label">Selfie</div>
+            </div>
+
+            <!-- ============================================================
+             * ✅✅✅ NOUVEAU : Bouton Prendre la photo
+             * Capture l'image du flux vidéo et affiche l'aperçu
+             * ============================================================ -->
+            <div class="camera-btn-wrapper">
+                <button class="camera-btn capture" id="captureBtn">📷</button>
+                <div class="camera-label">Photo</div>
+            </div>
+
+            <!-- ============================================================
+             * ✅✅✅ NOUVEAU : Bouton Caméra arrière
+             * facingMode: "environment" = caméra du dos du téléphone
+             * ============================================================ -->
+            <div class="camera-btn-wrapper">
+                <button class="camera-btn" id="backCamBtn">🔄</button>
+                <div class="camera-label">Arrière</div>
+            </div>
+        </div>
+
+        <div class="camera-controls" id="previewControls" style="display: none;">
+            <!-- ============================================================
+             * ✅✅✅ NOUVEAU : Bouton Annuler (reprendre une photo)
+             * Efface l'aperçu et relance le flux caméra
+             * ============================================================ -->
+            <div class="camera-btn-wrapper">
+                <button class="camera-btn" id="retakeBtn">❌</button>
+                <div class="camera-label">Refaire</div>
+            </div>
+
+            <!-- ============================================================
+             * ✅✅✅ NOUVEAU : Bouton Valider la photo
+             * Ajoute la photo comme sticker dans la galerie
+             * ============================================================ -->
+            <div class="camera-btn-wrapper">
+                <button class="camera-btn capture" id="confirmBtn">✅</button>
+                <div class="camera-label">Utiliser</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+     * ✅✅✅ MENU AUTOCOLLANTS AMÉLIORÉ
+     * 4 onglets : Prédéfinis, Ma Galerie, 📸 Photo, Emojis
+     * ============================================================ -->
     <div id="stickerPanel">
         <div class="sticker-header">
             <h3>✨ Choisis un autocollant</h3>
             <button class="close-stickers" id="closeStickerBtn">Fermer ✖</button>
         </div>
-        <div class="sticker-size-control">
-            <span>Taille :</span>
-            <input type="range" id="stickerSizeSlider" min="50" max="400" value="150">
-            <span id="stickerSizeValue">150px</span>
-        </div>
-        <div class="sticker-grid" id="stickerGrid"></div>
-    </div>
 
-    <!-- MENU EMOJI -->
-    <div id="emojiPanel">
-        <div class="sticker-header">
-            <h3>😀 Choisis un emoji</h3>
-            <button class="close-stickers" id="closeEmojiBtn">Fermer ✖</button>
-        </div>
-        <div class="sticker-size-control">
-            <span>Taille :</span>
-            <input type="range" id="emojiSizeSlider" min="30" max="300" value="80">
-            <span id="emojiSizeValue">80px</span>
-        </div>
-        <div class="emoji-grid" id="emojiGrid"></div>
-    </div>
-
-    <!-- ============================================================
-         ✅ NOUVEAU : OVERLAY APPAREIL PHOTO (SELFIE / CAMÉRA)
-         - Utilise getUserMedia pour accéder à la caméra
-         - Mode selfie par défaut (caméra avant)
-         - Bouton pour basculer entre caméra avant/arrière
-         - Preview après capture pour valider ou refaire
-         - La photo est ensuite ajoutée comme sticker
-         ============================================================ -->
-    <div id="cameraOverlay">
-        <video id="cameraVideo" autoplay playsinline muted></video>
-        <img id="cameraPreview" alt="preview">
-        <div id="cameraFlash"></div>
-
-        <!-- Barre supérieure -->
-        <div class="camera-top-bar">
-            <button class="camera-close-btn" id="cameraCloseBtn">✕</button>
-            <div class="camera-title" id="cameraTitle">📷 Selfie</div>
-            <button class="camera-switch-btn" id="cameraSwitchBtn">🔄</button>
+        <!-- ============================================================
+         * ✅✅✅ Système d'onglets - 4 onglets au lieu de 3
+         * Ajout de l'onglet "📸 Photo" pour accéder à la caméra
+         * ============================================================ -->
+        <div class="sticker-tabs">
+            <button class="sticker-tab active" data-tab="default">🎨 Prédéfinis</button>
+            <button class="sticker-tab" data-tab="gallery">📁 Galerie</button>
+            <button class="sticker-tab" data-tab="camera">📸 Photo</button>
+            <button class="sticker-tab" data-tab="emoji">😀 Emojis</button>
         </div>
 
-        <!-- Barre inférieure (mode capture) -->
-        <div class="camera-bottom-bar" id="cameraBottomBar">
-            <button class="capture-btn" id="captureBtn"></button>
+        <!-- Onglet 1: Stickers prédéfinis (existants) -->
+        <div class="tab-content active" id="tab-default">
+            <div class="sticker-grid" id="stickerGrid"></div>
         </div>
 
-        <!-- Barre de confirmation (après capture) -->
-        <div class="camera-confirm-bar" id="cameraConfirmBar">
-            <button class="camera-action-btn" id="retakeBtn">🔄 Refaire</button>
-            <button class="camera-action-btn primary" id="usePhotoBtn">✅ Utiliser</button>
+        <!-- ============================================================
+         * ✅✅✅ Onglet 2 - Galerie personnalisée
+         * Ajout du bouton "📸 Prendre une photo" en plus de "Ajouter depuis ma galerie"
+         * ============================================================ -->
+        <div class="tab-content" id="tab-gallery">
+            <input type="file" id="galleryUpload" accept="image/*" style="display: none;" multiple>
+            <!-- ✅✅✅ NOUVEAU : Bouton caméra dans l'onglet galerie -->
+            <button class="camera-gallery-btn" id="galleryCameraBtn">
+                <span>📸</span>
+                Prendre une photo maintenant
+            </button>
+            <button class="upload-gallery-btn" id="uploadBtn">
+                <span>🖼️</span>
+                Ajouter depuis ma galerie
+            </button>
+            <div class="sticker-grid" id="galleryGrid"></div>
         </div>
 
-        <!-- Message d'erreur -->
-        <div class="camera-error" id="cameraError">
-            <h3>📷 Caméra indisponible</h3>
-            <p id="cameraErrorMsg">Impossible d'accéder à la caméra. Vérifie les permissions.</p>
-            <button id="cameraErrorClose">Fermer</button>
+        <!-- ============================================================
+         * ✅✅✅ NOUVEAU : Onglet 3 - Accès rapide à la caméra
+         * Un bouton central pour ouvrir directement le panneau photo
+         * ============================================================ -->
+        <div class="tab-content" id="tab-camera">
+            <button class="camera-gallery-btn" id="cameraTabBtn" style="margin-top: 30px;">
+                <span>📸</span>
+                Ouvrir la caméra
+            </button>
+            <p style="color: rgba(255,255,255,0.5); text-align: center; font-size: 12px; margin-top: 15px;">
+                Prends une photo et ajoute-la directement comme autocollant !
+            </p>
+        </div>
+
+        <!-- Onglet 4: Emojis -->
+        <div class="tab-content" id="tab-emoji">
+            <div class="emoji-size-control">
+                <label>Taille:</label>
+                <input type="range" id="emojiSizeSlider" min="30" max="200" value="80">
+                <span id="emojiSizeValue" style="color: white; font-size: 12px;">80px</span>
+            </div>
+            <div class="sticker-grid" id="emojiGrid"></div>
         </div>
     </div>
 
@@ -597,7 +590,6 @@
         const SERVICE_ID = "service_ctymr5f";
         const TEMPLATE_ID = "template_wc1x8ag";
         const TO_EMAIL = "insim5628@gmail.com";
-
         // --- VARIABLES GLOBALES ---
         const canvas = document.getElementById('fogCanvas');
         const ctx = canvas.getContext('2d');
@@ -612,46 +604,32 @@
         const colorPicker = document.getElementById('colorPicker');
         const notification = document.getElementById('notification');
         const loading = document.getElementById('loading');
-        const galleryBtn = document.getElementById('galleryBtn');
-        const galleryInput = document.getElementById('galleryInput');
-        const emojiBtn = document.getElementById('emojiBtn');
-        const emojiPanel = document.getElementById('emojiPanel');
-        const closeEmojiBtn = document.getElementById('closeEmojiBtn');
-        const emojiGrid = document.getElementById('emojiGrid');
-        const stickerSizeSlider = document.getElementById('stickerSizeSlider');
-        const stickerSizeValue = document.getElementById('stickerSizeValue');
-        const emojiSizeSlider = document.getElementById('emojiSizeSlider');
-        const emojiSizeValue = document.getElementById('emojiSizeValue');
-
-        // ✅ NOUVEAU : Références caméra
-        const selfieBtn = document.getElementById('selfieBtn');
-        const cameraOverlay = document.getElementById('cameraOverlay');
-        const cameraVideo = document.getElementById('cameraVideo');
-        const cameraPreview = document.getElementById('cameraPreview');
-        const cameraFlash = document.getElementById('cameraFlash');
-        const cameraCloseBtn = document.getElementById('cameraCloseBtn');
-        const cameraSwitchBtn = document.getElementById('cameraSwitchBtn');
-        const cameraTitle = document.getElementById('cameraTitle');
-        const cameraBottomBar = document.getElementById('cameraBottomBar');
-        const cameraConfirmBar = document.getElementById('cameraConfirmBar');
-        const captureBtn = document.getElementById('captureBtn');
-        const retakeBtn = document.getElementById('retakeBtn');
-        const usePhotoBtn = document.getElementById('usePhotoBtn');
-        const cameraError = document.getElementById('cameraError');
-        const cameraErrorMsg = document.getElementById('cameraErrorMsg');
-        const cameraErrorClose = document.getElementById('cameraErrorClose');
-
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
         let currentSize = 25;
         let currentColorHex = '#d2e6ff';
-
+        // --- AUTOCOLLANTS ---
         let activeStickerImg = null;
         let stickerMode = false;
-        let currentStickerSize = 150;
+
+        // ============================================================
+        // ✅✅✅ Variables pour les fonctionnalités galerie/emoji/caméra
+        // galleryStickers: stocke les images uploadées par l'utilisateur
+        // currentEmoji: stocke l'emoji sélectionné pour placement
+        // currentEmojiSize: taille de l'emoji en pixels
+        // cameraStream: flux vidéo de la caméra
+        // currentFacingMode: "user" (selfie) ou "environment" (arrière)
+        // capturedPhotoData: données de la photo capturée (data URL)
+        // ============================================================
+        let galleryStickers = [];
+        let currentEmoji = null;
         let currentEmojiSize = 80;
-        
+        let cameraStream = null;
+        let currentFacingMode = 'user'; // Par défaut : caméra frontale (selfie)
+        let capturedPhotoData = null;
+
+        // ✅ LISTE DES AUTOCOLLANTS - CHEMINS RELATIFS
         const stickers = [
             { name: "d1", url: "douaa1.png" },
             { name: "dou7", url: "dou7.png" },
@@ -665,44 +643,42 @@
             { name: "lion", url: "liondo.png" },
         ];
 
-        const emojiCategories = {
-            "Visages": ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🥵","🥶","🥴","😵","🤯","🤠","🥳","😎","🤓","🧐"],
-            "Gestes": ["👋","🤚","🖐️","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","💪","🦾","🖤","🤍","🤎","💔","❤️","🧡","💛","💚","💙","💜","💕","💞","💓","💗","💖","💘","💝","💟","♥️","💯","💢","💥","💫","💦","💨","🕳️","💣","💬","👁️‍🗨️","🗨️","🗯️","💭","💤"],
-            "Animaux": ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🪲","🐢","🐍","🦎","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🐈","🐓","🦃","🦚","🦜","🦢","🦩","🕊️","🐇","🦝","🦨","🦡","🦦","🦥","🐁","🐀","🐿️","🦔"],
-            "Nature": ["🌸","💮","🏵️","🌹","🥀","🌺","🌻","🌼","🌷","🌱","🪴","🌲","🌳","🌴","🌵","🌾","🌿","☘️","🍀","🍁","🍂","🍃","🍄","🌍","🌎","🌏","🌕","🌖","🌗","🌘","🌑","🌒","🌓","🌔","🌙","🌚","🌛","🌜","☀️","🌝","🌞","⭐","🌟","🌠","☁️","⛅","🌤️","🌥️","🌦️","🌧️","⛈️","🌩️","🌨️","❄️","☃️","⛄","🌬️","💨","💧","💦","🌊","🔥","✨","🎇","🎆","🌈","☂️","⚡"],
-            "Nourriture": ["🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶️","🫑","🌽","🥕","🧄","🧅","🥔","🍠","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖","🌭","🍔","🍟","🍕","🫓","🥪","🥙","🧆","🌮","🌯","🫔","🥗","🥘","🫕","🥫","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🦪","🍤","🍙","🍚","🍘","🍥","🥠","🥮","🍢","🍡","🍧","🍨","🍦","🥧","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🌰","🥜","🍯"],
-            "Objets": ["⌚","📱","💻","⌨️","🖥️","🖨️","🖱️","🖲️","🕹️","🗜️","💽","💾","💿","📀","📼","📷","📸","📹","🎥","📽️","🎞️","📞","☎️","📟","📠","📺","📻","🎙️","🎚️","🎛️","🧭","⏱️","⏲️","⏰","🕰️","⌛","📡","🔋","🔌","💡","🔦","🕯️","🧯","🛢️","💸","💵","💴","💶","💷","🪙","💰","💳","💎","⚖️","🪜","🧰","🪛","🔧","🔨","⚒️","🛠️","⛏️","🪚","🔩","⚙️","🪤","🧱","⛓️","🧲","🔫","💣","🧨","🪓","🔪","🗡️","⚔️","🛡️","🚬","⚰️","🪦","⚱️","🏺","🔮","📿","🧿","💈","⚗️","🔭","🔬","🕳️","🩹","🩺","💊","💉","🩸","🧬","🦠","🧫","🧪","🌡️","🧹","🪠","🧺","🧻","🚽","🚰","🚿","🛁","🛀","🧼","🪥","🪒","🧽","🪣","🧴","🛎️","🔑","🗝️","🚪","🪑","🛋️","🛏️","🛌","🧸","🪆","🖼️","🪞","🪟","🛍️","🛒","🎁","🎈","🎏","🎀","🪄","🪅","🎊","🎉","🎎","🏮","🎐","🧧","✉️","📩","📨","📧","💌","📥","📤","📦","🏷️","🪧","📪","📫","📬","📭","📮","📯","📜","📃","📄","📑","🧾","📊","📈","📉","🗒️","🗓️","📆","📅","🗑️","📇","🗃️","🗳️","🗄️","📋","📁","📂","🗂️","🗞️","📰","📓","📔","📒","📕","📗","📘","📙","📚","📖","🔖","🧷","🔗","📎","🖇️","📐","📏","🧮","📌","📍","✂️","🖊️","🖋️","✒️","🖌️","🖍️","📝","✏️","🔍","🔎","🔏","🔐","🔒","🔓"]
-        };
-
-        let galleryImages = [];
-
         // ============================================================
-        // ✅ NOUVEAU : VARIABLES ÉTAT CAMÉRA
+        // ✅✅✅ Liste d'emojis populaires pour le dessin
         // ============================================================
-        let currentStream = null;
-        let currentFacingMode = 'user'; // 'user' = selfie, 'environment' = arrière
-        let capturedPhotoDataUrl = null;
+        const emojis = [
+            "😀", "😂", "😍", "🥰", "😎", "🤩", "🥳", "😜",
+            "👍", "👏", "🤝", "💪", "🙏", "✌️", "🤟", "👋",
+            "❤️", "💖", "💝", "💕", "💗", "🧡", "💛", "💚",
+            "🔥", "⭐", "🌟", "✨", "💫", "🌈", "🎈", "🎉",
+            "🐱", "🐶", "🐻", "🦁", "🐼", "🐨", "🐯", "🦊",
+            "🌸", "🌺", "🌻", "🌷", "🌹", "💐", "🍀", "🌿",
+            "🎵", "🎶", "🎸", "🎹", "🎺", "🥁", "🎻", "🎤",
+            "🍎", "🍕", "🍔", "🍟", "🍦", "🍩", "🍪", "🎂"
+        ];
 
+        // Initialisation
         function init() {
             resizeCanvas();
             applyBrushSettings();
             generateStickerMenu();
-            generateEmojiMenu();
+            generateEmojiGrid();
+            setupGalleryUpload();
+            setupTabSystem();
+            setupEmojiSizeSlider();
+            setupCameraSystem();
         }
-
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
         window.addEventListener('resize', resizeCanvas);
-
         function hexToRgba(hex, alpha) {
             let r = parseInt(hex.slice(1, 3), 16);
             let g = parseInt(hex.slice(3, 5), 16);
             let b = parseInt(hex.slice(5, 7), 16);
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
-
         function applyBrushSettings() {
             ctx.globalCompositeOperation = 'source-over';
             ctx.lineWidth = currentSize;
@@ -712,252 +688,76 @@
             ctx.shadowBlur = currentSize * 0.8;
             ctx.shadowColor = hexToRgba(currentColorHex, 0.9);
         }
-
         sizeSlider.addEventListener('input', (e) => {
             currentSize = parseInt(e.target.value);
             applyBrushSettings();
         });
-
         colorPicker.addEventListener('input', (e) => {
             currentColorHex = e.target.value;
             applyBrushSettings();
         });
-
-        stickerSizeSlider.addEventListener('input', (e) => {
-            currentStickerSize = parseInt(e.target.value);
-            stickerSizeValue.textContent = currentStickerSize + 'px';
-        });
-
-        emojiSizeSlider.addEventListener('input', (e) => {
-            currentEmojiSize = parseInt(e.target.value);
-            emojiSizeValue.textContent = currentEmojiSize + 'px';
-        });
-
+        // --- GESTION DES AUTOCOLLANTS ---
         function generateStickerMenu() {
             stickerGrid.innerHTML = '';
             stickers.forEach((sticker) => {
                 const div = document.createElement('div');
                 div.className = 'sticker-item';
-                
                 const img = document.createElement('img');
                 img.src = sticker.url;
                 img.alt = sticker.name;
                 img.crossOrigin = "Anonymous";
-                
                 img.onerror = function() {
+                    console.error('Image non trouvée:', sticker.url);
                     div.style.background = 'rgba(255,0,0,0.2)';
                     div.innerHTML = '<span style="color: white; font-size: 10px;">❌</span>';
                 };
-                
                 div.appendChild(img);
-                div.addEventListener('click', () => selectSticker(img));
+                div.addEventListener('click', () => {
+                    selectSticker(img);
+                });
                 stickerGrid.appendChild(div);
             });
-            renderGalleryStickers();
         }
-
-        function renderGalleryStickers() {
-            const oldGallerySection = document.getElementById('gallerySection');
-            if (oldGallerySection) oldGallerySection.remove();
-
-            if (galleryImages.length === 0) return;
-
-            const section = document.createElement('div');
-            section.id = 'gallerySection';
-            section.style.gridColumn = '1 / -1';
-            section.style.marginTop = '10px';
-            section.style.borderTop = '1px solid rgba(255,255,255,0.1)';
-            section.style.paddingTop = '10px';
-
-            const title = document.createElement('p');
-            title.style.color = 'rgba(255,255,255,0.5)';
-            title.style.fontSize = '11px';
-            title.style.margin = '0 0 10px 0';
-            title.textContent = '📁 Depuis la galerie / selfie :';
-            section.appendChild(title);
-
-            const grid = document.createElement('div');
-            grid.style.display = 'grid';
-            grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
-            grid.style.gap = '10px';
-
-            galleryImages.forEach((dataUrl, index) => {
-                const div = document.createElement('div');
-                div.className = 'sticker-item';
-                div.style.position = 'relative';
-
-                const img = document.createElement('img');
-                img.src = dataUrl;
-                img.alt = 'gallery-' + index;
-
-                div.appendChild(img);
-
-                const removeBtn = document.createElement('button');
-                removeBtn.textContent = '✖';
-                removeBtn.style.position = 'absolute';
-                removeBtn.style.top = '2px';
-                removeBtn.style.right = '2px';
-                removeBtn.style.background = 'rgba(255,0,0,0.7)';
-                removeBtn.style.border = 'none';
-                removeBtn.style.color = 'white';
-                removeBtn.style.borderRadius = '50%';
-                removeBtn.style.width = '18px';
-                removeBtn.style.height = '18px';
-                removeBtn.style.fontSize = '10px';
-                removeBtn.style.cursor = 'pointer';
-                removeBtn.style.lineHeight = '1';
-                removeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    galleryImages.splice(index, 1);
-                    renderGalleryStickers();
-                });
-
-                div.appendChild(removeBtn);
-                div.addEventListener('click', () => selectSticker(img));
-                grid.appendChild(div);
-            });
-
-            section.appendChild(grid);
-            stickerGrid.appendChild(section);
-        }
-
         function selectSticker(imgElement) {
             activeStickerImg = imgElement;
-            activeStickerImg._type = 'image';
             stickerMode = true;
             stickerPanel.classList.remove('open');
             showNotification('📍 Touche l\'écran pour placer !');
         }
-
-        function generateEmojiMenu() {
-            emojiGrid.innerHTML = '';
-            Object.keys(emojiCategories).forEach(category => {
-                const catTitle = document.createElement('div');
-                catTitle.style.gridColumn = '1 / -1';
-                catTitle.style.color = 'rgba(255,255,255,0.4)';
-                catTitle.style.fontSize = '11px';
-                catTitle.style.padding = '5px 0 2px 5px';
-                catTitle.textContent = category;
-                emojiGrid.appendChild(catTitle);
-
-                emojiCategories[category].forEach(emoji => {
-                    const div = document.createElement('div');
-                    div.className = 'emoji-item';
-                    div.textContent = emoji;
-                    div.addEventListener('click', () => selectEmoji(emoji));
-                    emojiGrid.appendChild(div);
-                });
-            });
-        }
-
-        function selectEmoji(emoji) {
-            const tempCanvas = document.createElement('canvas');
-            const size = currentEmojiSize * 2;
-            tempCanvas.width = size;
-            tempCanvas.height = size;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.font = `${size * 0.85}px serif`;
-            tempCtx.textAlign = 'center';
-            tempCtx.textBaseline = 'middle';
-            tempCtx.fillText(emoji, size / 2, size / 2);
-
-            const img = new Image();
-            img.src = tempCanvas.toDataURL();
-            img._type = 'emoji';
-            img._emojiSize = currentEmojiSize;
-
-            img.onload = () => {
-                activeStickerImg = img;
-                stickerMode = true;
-                emojiPanel.classList.remove('open');
-                showNotification('📍 Touche l\'écran pour placer l\'emoji !');
-            };
-        }
-
-        galleryBtn.addEventListener('click', () => galleryInput.click());
-
-        galleryInput.addEventListener('change', (e) => {
-            const files = e.target.files;
-            if (!files || files.length === 0) return;
-
-            let loaded = 0;
-            const total = files.length;
-
-            Array.from(files).forEach(file => {
-                if (!file.type.startsWith('image/')) return;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    galleryImages.push(event.target.result);
-                    loaded++;
-                    if (loaded >= total) {
-                        renderGalleryStickers();
-                        showNotification(`✅ ${loaded} image(s) ajoutée(s) !`);
-                        stickerPanel.classList.add('open');
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-            galleryInput.value = '';
-        });
-
-        emojiBtn.addEventListener('click', () => {
-            emojiPanel.classList.add('open');
-            stickerPanel.classList.remove('open');
-        });
-
-        closeEmojiBtn.addEventListener('click', () => {
-            emojiPanel.classList.remove('open');
-            stickerMode = false;
-        });
-
         function placeSticker(x, y) {
             if (!activeStickerImg || !stickerMode) return;
-
-            let size;
-            if (activeStickerImg._type === 'emoji') {
-                size = activeStickerImg._emojiSize || currentEmojiSize;
-            } else {
-                size = currentStickerSize;
-            }
-
+            const size = 150;
             const ctxBackup = ctx.globalCompositeOperation;
             const shadowBackup = ctx.shadowBlur;
             const strokeBackup = ctx.strokeStyle;
             const shadowColorBackup = ctx.shadowColor;
-
             ctx.globalCompositeOperation = 'source-over';
             ctx.shadowBlur = 0;
             ctx.strokeStyle = 'transparent';
-
             ctx.drawImage(activeStickerImg, x - size/2, y - size/2, size, size);
-
             ctx.globalCompositeOperation = ctxBackup;
             ctx.shadowBlur = shadowBackup;
             ctx.strokeStyle = strokeBackup;
             ctx.shadowColor = shadowColorBackup;
-
             stickerMode = false;
             activeStickerImg = null;
-            showNotification('✅ Ajouté !');
+            showNotification('✅ Autocollant ajouté !');
         }
-
+        // --- EVENTS AUTOCOLLANTS ---
         stickerBtn.addEventListener('click', () => {
             stickerPanel.classList.add('open');
-            emojiPanel.classList.remove('open');
         });
-
         closeStickerBtn.addEventListener('click', () => {
             stickerPanel.classList.remove('open');
             stickerMode = false;
         });
-
+        // --- DESSIN ET PLACEMENT ---
         function getPos(e) {
             if (e.touches && e.touches.length > 0) {
                 return { x: e.touches[0].clientX, y: e.touches[0].clientY };
             }
             return { x: e.clientX, y: e.clientY };
         }
-
         function startDraw(e) {
             if (e.target !== canvas && !e.target.classList.contains('sticker-item')) return;
             const pos = getPos(e);
@@ -965,13 +765,17 @@
                 placeSticker(pos.x, pos.y);
                 return;
             }
+            if (currentEmoji) {
+                placeEmoji(pos.x, pos.y, currentEmoji, currentEmojiSize);
+                currentEmoji = null;
+                return;
+            }
             isDrawing = true;
             [lastX, lastY] = [pos.x, pos.y];
             drawDot(pos.x, pos.y);
         }
-
         function draw(e) {
-            if (!isDrawing || stickerMode) return;
+            if (!isDrawing || stickerMode || currentEmoji) return;
             e.preventDefault();
             const pos = getPos(e);
             ctx.beginPath();
@@ -980,24 +784,23 @@
             ctx.stroke();
             [lastX, lastY] = [pos.x, pos.y];
         }
-
         function drawDot(x, y) {
             ctx.beginPath();
             ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
             ctx.fillStyle = ctx.strokeStyle;
             ctx.fill();
         }
-
         function endDraw() {
             isDrawing = false;
         }
-
         function showNotification(message) {
             notification.textContent = message;
             notification.classList.add('show');
-            setTimeout(() => notification.classList.remove('show'), 3000);
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
         }
-
+        // --- EMAIL & SAVE ---
         sendEmailBtn.addEventListener('click', async () => {
             loading.classList.add('show');
             try {
@@ -1014,17 +817,14 @@
                 tempCtx.fillStyle = '#0a0a12';
                 tempCtx.fillRect(0, 0, width, height);
                 tempCtx.drawImage(canvas, 0, 0, width, height);
-                
                 const compressedDataUrl = tempCanvas.toDataURL('image/jpeg', 0.7);
                 const base64Image = compressedDataUrl.split(',')[1];
-                
                 const templateParams = {
                     to_email: TO_EMAIL,
                     message: 'Nouveau dessin brouillard !',
                     image: base64Image,
                     image_name: `dessin-${Date.now()}.jpg`
                 };
-                
                 await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
                 loading.classList.remove('show');
                 showNotification('✅ Email envoyé !');
@@ -1033,7 +833,6 @@
                 showNotification('❌ Erreur: ' + (error.text || error.message));
             }
         });
-
         saveBtn.addEventListener('click', async () => {
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
@@ -1049,13 +848,12 @@
             link.click();
             showNotification('✅ Sauvegardé !');
         });
-
         clearBtn.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             applyBrushSettings();
             showNotification('🗑️ Effacé');
         });
-
+        // Touch listeners
         canvas.addEventListener('mousedown', startDraw);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', endDraw);
@@ -1063,29 +861,196 @@
         canvas.addEventListener('touchstart', startDraw);
         canvas.addEventListener('touchmove', draw);
         canvas.addEventListener('touchend', endDraw);
-
-        document.querySelectorAll('.btn, .sticker-item, .emoji-item, .close-stickers, input').forEach(el => {
+        document.querySelectorAll('.btn, .sticker-item, .close-stickers, input').forEach(el => {
             el.addEventListener('touchstart', (e) => e.stopPropagation());
         });
 
         // ============================================================
-        // ✅ NOUVEAU : LOGIQUE CAMÉRA / SELFIE
+        // ✅✅✅ Système d'onglets pour le panneau stickers
+        // ============================================================
+        function setupTabSystem() {
+            const tabs = document.querySelectorAll('.sticker-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.sticker-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    const tabId = `tab-${tab.dataset.tab}`;
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        // ============================================================
+        // ✅✅✅ Génération de la grille d'emojis
+        // ============================================================
+        function generateEmojiGrid() {
+            const emojiGrid = document.getElementById('emojiGrid');
+            emojiGrid.innerHTML = '';
+            emojis.forEach((emoji) => {
+                const div = document.createElement('div');
+                div.className = 'sticker-item emoji-sticker';
+                div.textContent = emoji;
+                div.addEventListener('click', () => {
+                    selectEmoji(emoji);
+                });
+                emojiGrid.appendChild(div);
+            });
+        }
+        function selectEmoji(emoji) {
+            currentEmoji = emoji;
+            stickerPanel.classList.remove('open');
+            showNotification('📍 Touche l\'écran pour placer l\'emoji !');
+        }
+        function placeEmoji(x, y, emoji, size) {
+            const ctxBackup = ctx.globalCompositeOperation;
+            const fontBackup = ctx.font;
+            const textAlignBackup = ctx.textAlign;
+            const textBaselineBackup = ctx.textBaseline;
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.font = `${size}px serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(emoji, x, y);
+            ctx.globalCompositeOperation = ctxBackup;
+            ctx.font = fontBackup;
+            ctx.textAlign = textAlignBackup;
+            ctx.textBaseline = textBaselineBackup;
+            showNotification('✅ Emoji ajouté !');
+        }
+        function setupEmojiSizeSlider() {
+            const emojiSizeSlider = document.getElementById('emojiSizeSlider');
+            const emojiSizeValue = document.getElementById('emojiSizeValue');
+            if (emojiSizeSlider) {
+                emojiSizeSlider.addEventListener('input', (e) => {
+                    currentEmojiSize = parseInt(e.target.value);
+                    emojiSizeValue.textContent = `${currentEmojiSize}px`;
+                });
+            }
+        }
+
+        // ============================================================
+        // ✅✅✅ Système d'upload d'images depuis la galerie
+        // ============================================================
+        function setupGalleryUpload() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const galleryUpload = document.getElementById('galleryUpload');
+            const galleryGrid = document.getElementById('galleryGrid');
+            uploadBtn.addEventListener('click', () => {
+                galleryUpload.click();
+            });
+            galleryUpload.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+                Array.from(files).forEach(file => {
+                    if (!file.type.startsWith('image/')) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const imgSrc = event.target.result;
+                        const stickerData = {
+                            name: file.name,
+                            src: imgSrc
+                        };
+                        galleryStickers.push(stickerData);
+                        addGalleryItemToGrid(stickerData, galleryGrid);
+                    };
+                    reader.readAsDataURL(file);
+                });
+                galleryUpload.value = '';
+                showNotification(`✅ ${files.length} image(s) ajoutée(s) !`);
+            });
+        }
+        function addGalleryItemToGrid(stickerData, gridElement) {
+            const div = document.createElement('div');
+            div.className = 'sticker-item gallery-item';
+            const img = document.createElement('img');
+            img.src = stickerData.src;
+            img.alt = stickerData.name;
+            const badge = document.createElement('div');
+            badge.className = 'gallery-badge';
+            badge.textContent = 'Moi';
+            div.appendChild(img);
+            div.appendChild(badge);
+            div.addEventListener('click', () => {
+                selectGallerySticker(img);
+            });
+            gridElement.appendChild(div);
+        }
+        function selectGallerySticker(imgElement) {
+            activeStickerImg = imgElement;
+            stickerMode = true;
+            stickerPanel.classList.remove('open');
+            showNotification('📍 Touche l\'écran pour placer ton image !');
+        }
+
+        // ============================================================
+        // ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+        // ✅✅✅ NOUVEAU : SYSTÈME CAMÉRA / PHOTO COMPLET
+        // ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+        //
+        // Ce bloc ajoute TOUTE la fonctionnalité caméra :
+        //
+        // 1. openCamera(facingMode) - Démarre le flux vidéo de la caméra
+        //    facingMode = "user" → caméra frontale (selfie 🤳)
+        //    facingMode = "environment" → caméra arrière 📸
+        //    Phone-friendly : utilise { video: { facingMode } } avec
+        //    playsinline et autoplay pour iOS Safari
+        //
+        // 2. capturePhoto() - Capture l'image actuelle du flux vidéo
+        //    Dessine la frame du <video> sur un <canvas> caché
+        //    Convertit en data URL et affiche l'aperçu
+        //
+        // 3. confirmPhoto() - Valide la photo capturée
+        //    Ajoute la photo dans galleryStickers ET dans galleryGrid
+        //    Ferme le panneau caméra automatiquement
+        //
+        // 4. closeCameraPanel() - Arrête le flux vidéo et ferme le panneau
+        //    Libère la caméra (stop tous les tracks) pour économiser la batterie
+        //
+        // 5. setupCameraSystem() - Initialise TOUS les boutons caméra :
+        //    - Bouton "📸 Photo" dans la toolbar (accès rapide selfie)
+        //    - Bouton "📸 Prendre une photo maintenant" dans l'onglet Galerie
+        //    - Bouton "📸 Ouvrir la caméra" dans l'onglet Photo
+        //    - Bouton Selfie 🤳 (caméra frontale)
+        //    - Bouton Caméra arrière 🔄 (switch face arrière)
+        //    - Bouton Capture 📷 (prendre la photo)
+        //    - Bouton Refaire ❌ (annuler et recommencer)
+        //    - Bouton Valider ✅ (confirmer et ajouter comme sticker)
+        //
         // ============================================================
 
-        /**
-         * Démarre le flux vidéo de la caméra
-         * @param {string} facingMode - 'user' (selfie) ou 'environment' (arrière)
-         */
-        async function startCamera(facingMode = 'user') {
-            // Arrêter tout flux existant
-            stopCamera();
+        const cameraPanel = document.getElementById('cameraPanel');
+        const cameraVideo = document.getElementById('cameraVideo');
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const photoPreview = document.getElementById('photoPreview');
+        const cameraControls = document.getElementById('cameraControls');
+        const previewControls = document.getElementById('previewControls');
+        const selfieBtn = document.getElementById('selfieBtn');
+        const backCamBtn = document.getElementById('backCamBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cameraBtn = document.getElementById('cameraBtn');
+        const galleryCameraBtn = document.getElementById('galleryCameraBtn');
+        const cameraTabBtn = document.getElementById('cameraTabBtn');
 
-            // Cacher l'erreur si affichée
-            cameraError.classList.remove('show');
-            cameraVideo.style.display = 'block';
+        /**
+         * ✅✅✅ NOUVEAU : Ouvre la caméra avec le mode demandé
+         * @param {string} facingMode - "user" (selfie) ou "environment" (arrière)
+         * Phone-friendly : constraints optimisées pour mobile
+         */
+        async function openCamera(facingMode) {
+            // Arrêter l'ancien flux si existant
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+            currentFacingMode = facingMode;
 
             try {
-                // Demande d'accès à la caméra
+                // ✅✅✅ NOUVEAU : Constraints phone-friendly
+                // facingMode: "user" = caméra frontale pour selfies
+                // facingMode: "environment" = caméra arrière du téléphone
+                // width/height idéaux pour bonne qualité sans trop consommer
                 const constraints = {
                     video: {
                         facingMode: facingMode,
@@ -1095,193 +1060,165 @@
                     audio: false
                 };
 
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                currentStream = stream;
-                cameraVideo.srcObject = stream;
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                cameraVideo.srcObject = cameraStream;
 
-                // ✅ IMPORTANT : miroir pour mode selfie (plus naturel)
-                cameraVideo.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+                // Réinitialiser l'interface
+                cameraVideo.classList.remove('hidden');
+                photoPreview.classList.remove('visible');
+                cameraControls.style.display = 'flex';
+                previewControls.style.display = 'none';
+                capturedPhotoData = null;
 
-                // Mise à jour du titre
-                cameraTitle.textContent = facingMode === 'user' ? '📷 Selfie' : '📷 Caméra arrière';
-
+                // Ouvrir le panneau
+                cameraPanel.classList.add('open');
+                stickerPanel.classList.remove('open');
             } catch (err) {
                 console.error('Erreur caméra:', err);
-                cameraVideo.style.display = 'none';
-                
-                // Message d'erreur personnalisé selon le type d'erreur
-                let errorMsg = 'Impossible d\'accéder à la caméra.';
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    errorMsg = 'Permission refusée. Autorise l\'accès à la caméra dans les paramètres de ton navigateur.';
-                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-                    errorMsg = 'Aucune caméra détectée sur cet appareil.';
-                } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-                    errorMsg = 'La caméra est déjà utilisée par une autre application.';
-                } else if (err.name === 'OverconstrainedError') {
-                    // Fallback : essayer sans contrainte facingMode
-                    try {
-                        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                        currentStream = fallbackStream;
-                        cameraVideo.srcObject = fallbackStream;
-                        cameraVideo.style.transform = 'scaleX(1)';
-                        cameraTitle.textContent = '📷 Caméra';
-                        return;
-                    } catch (e2) {
-                        errorMsg = 'Impossible d\'accéder à la caméra.';
-                    }
-                }
-                
-                cameraErrorMsg.textContent = errorMsg;
-                cameraError.classList.add('show');
+                showNotification('❌ Caméra non disponible');
             }
         }
 
         /**
-         * Arrête le flux vidéo et libère la caméra
-         */
-        function stopCamera() {
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-                currentStream = null;
-            }
-            cameraVideo.srcObject = null;
-        }
-
-        /**
-         * Ouvre l'overlay caméra
-         */
-        function openCamera() {
-            cameraOverlay.classList.add('show');
-            cameraPreview.style.display = 'none';
-            cameraBottomBar.style.display = 'flex';
-            cameraConfirmBar.classList.remove('show');
-            capturedPhotoDataUrl = null;
-            
-            // Démarrer en mode selfie
-            currentFacingMode = 'user';
-            startCamera(currentFacingMode);
-        }
-
-        /**
-         * Ferme l'overlay caméra
-         */
-        function closeCamera() {
-            cameraOverlay.classList.remove('show');
-            stopCamera();
-            cameraPreview.style.display = 'none';
-            cameraBottomBar.style.display = 'flex';
-            cameraConfirmBar.classList.remove('show');
-            capturedPhotoDataUrl = null;
-        }
-
-        /**
-         * Bascule entre caméra avant et arrière
-         */
-        function switchCamera() {
-            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-            startCamera(currentFacingMode);
-        }
-
-        /**
-         * Capture une photo depuis le flux vidéo
-         * Gère le miroir selfie pour que la photo corresponde à ce qu'on voit
+         * ✅✅✅ NOUVEAU : Capture la photo depuis le flux vidéo
+         * Dessine la frame actuelle du <video> sur un <canvas> caché
+         * Puis convertit en data URL pour l'aperçu
          */
         function capturePhoto() {
-            if (!currentStream) return;
+            if (!cameraStream) return;
 
-            // Effet flash
-            cameraFlash.classList.add('flash');
-            setTimeout(() => cameraFlash.classList.remove('flash'), 200);
+            // Configurer le canvas à la taille de la vidéo
+            cameraCanvas.width = cameraVideo.videoWidth;
+            cameraCanvas.height = cameraVideo.videoHeight;
 
-            // Canvas temporaire pour capturer
-            const captureCanvas = document.createElement('canvas');
-            const captureCtx = captureCanvas.getContext('2d');
-            
-            // Utiliser les dimensions réelles de la vidéo
-            captureCanvas.width = cameraVideo.videoWidth;
-            captureCanvas.height = cameraVideo.videoHeight;
+            const camCtx = cameraCanvas.getContext('2d');
 
-            // ✅ Si mode selfie, on miroir l'image pour correspondre à la preview
+            // ✅✅✅ NOUVEAU : Si selfie (caméra frontale), miroir horizontal
+            // pour que ce soit naturel comme un vrai selfie
             if (currentFacingMode === 'user') {
-                captureCtx.translate(captureCanvas.width, 0);
-                captureCtx.scale(-1, 1);
+                camCtx.translate(cameraCanvas.width, 0);
+                camCtx.scale(-1, 1);
             }
 
-            captureCtx.drawImage(cameraVideo, 0, 0, captureCanvas.width, captureCanvas.height);
+            // Capture la frame actuelle
+            camCtx.drawImage(cameraVideo, 0, 0);
 
-            // Convertir en dataURL (JPEG pour taille réduite)
-            capturedPhotoDataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
+            // Convertir en data URL
+            capturedPhotoData = cameraCanvas.toDataURL('image/jpeg', 0.85);
 
-            // Afficher la preview
-            cameraPreview.src = capturedPhotoDataUrl;
-            cameraPreview.style.display = 'block';
-            cameraBottomBar.style.display = 'none';
-            cameraConfirmBar.classList.add('show');
+            // Afficher l'aperçu
+            photoPreview.src = capturedPhotoData;
+            photoPreview.classList.add('visible');
+            cameraVideo.classList.add('hidden');
 
-            // Arrêter la caméra pour économiser la batterie
-            stopCamera();
+            // Changer les contrôles
+            cameraControls.style.display = 'none';
+            previewControls.style.display = 'flex';
+
+            // Vibration haptique si disponible (phone-friendly)
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
         }
 
         /**
-         * Refaire la photo (retour au live)
+         * ✅✅✅ NOUVEAU : Valide la photo et l'ajoute comme sticker
+         * La photo est ajoutée à galleryStickers et à la grille de galerie
+         * Puis le panneau caméra se ferme
          */
-        function retakePhoto() {
-            capturedPhotoDataUrl = null;
-            cameraPreview.style.display = 'none';
-            cameraBottomBar.style.display = 'flex';
-            cameraConfirmBar.classList.remove('show');
-            startCamera(currentFacingMode);
-        }
+        function confirmPhoto() {
+            if (!capturedPhotoData) return;
 
-        /**
-         * Valider la photo et l'ajouter comme sticker
-         */
-        function usePhoto() {
-            if (!capturedPhotoDataUrl) return;
+            // Créer un nom de fichier unique avec timestamp
+            const timestamp = Date.now();
+            const fileName = `photo-${timestamp}.jpg`;
 
-            // Sauvegarder dans la galerie
-            galleryImages.push(capturedPhotoDataUrl);
-            renderGalleryStickers();
-
-            // Créer un élément image pour le placement
-            const img = new Image();
-            img.src = capturedPhotoDataUrl;
-            img._type = 'image';
-            img._emojiSize = null;
-
-            img.onload = () => {
-                activeStickerImg = img;
-                stickerMode = true;
-                closeCamera();
-                showNotification('📍 Touche l\'écran pour placer ta photo !');
+            // Créer l'objet sticker
+            const stickerData = {
+                name: fileName,
+                src: capturedPhotoData
             };
+
+            // Ajouter à la galerie
+            galleryStickers.push(stickerData);
+
+            // Ajouter à la grille de l'onglet Galerie
+            const galleryGrid = document.getElementById('galleryGrid');
+            addGalleryItemToGrid(stickerData, galleryGrid);
+
+            // Fermer le panneau caméra
+            closeCameraPanel();
+
+            // Notification de succès
+            showNotification('📸 Photo ajoutée comme autocollant !');
         }
 
-        // ============================================================
-        // ✅ NOUVEAU : EVENT LISTENERS CAMÉRA
-        // ============================================================
-        selfieBtn.addEventListener('click', () => {
-            // Vérifier que l'API est disponible
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                showNotification('❌ Caméra non supportée sur ce navigateur');
-                return;
+        /**
+         * ✅✅✅ NOUVEAU : Ferme le panneau caméra et libère les ressources
+         * Arrête le flux vidéo pour économiser la batterie
+         */
+        function closeCameraPanel() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
             }
-            openCamera();
-        });
+            cameraPanel.classList.remove('open');
+            capturedPhotoData = null;
+        }
 
-        cameraCloseBtn.addEventListener('click', closeCamera);
-        cameraSwitchBtn.addEventListener('click', switchCamera);
-        captureBtn.addEventListener('click', capturePhoto);
-        retakeBtn.addEventListener('click', retakePhoto);
-        usePhotoBtn.addEventListener('click', usePhoto);
-        cameraErrorClose.addEventListener('click', closeCamera);
+        /**
+         * ✅✅✅ NOUVEAU : Initialise tout le système caméra
+         * Connecte tous les boutons aux bonnes fonctions
+         */
+        function setupCameraSystem() {
+            // ✅✅✅ Bouton "📸 Photo" dans la toolbar → ouvre en mode selfie
+            cameraBtn.addEventListener('click', () => {
+                openCamera('user');
+            });
 
-        // Empêcher les interactions de dessin sur l'overlay caméra
-        cameraOverlay.addEventListener('touchstart', (e) => e.stopPropagation());
-        cameraOverlay.addEventListener('touchmove', (e) => e.stopPropagation());
+            // ✅✅✅ Bouton "Prendre une photo" dans l'onglet Galerie → ouvre en mode selfie
+            galleryCameraBtn.addEventListener('click', () => {
+                stickerPanel.classList.remove('open');
+                openCamera('user');
+            });
+
+            // ✅✅✅ Bouton "Ouvrir la caméra" dans l'onglet Photo → ouvre en mode selfie
+            cameraTabBtn.addEventListener('click', () => {
+                stickerPanel.classList.remove('open');
+                openCamera('user');
+            });
+
+            // ✅✅✅ Bouton Selfie 🤳 → caméra frontale
+            selfieBtn.addEventListener('click', () => {
+                openCamera('user');
+            });
+
+            // ✅✅✅ Bouton Caméra arrière 🔄 → bascule face arrière
+            backCamBtn.addEventListener('click', () => {
+                openCamera('environment');
+            });
+
+            // ✅✅✅ Bouton Capture 📷 → prend la photo
+            captureBtn.addEventListener('click', () => {
+                capturePhoto();
+            });
+
+            // ✅✅✅ Bouton Refaire ❌ → annule et relance la caméra
+            retakeBtn.addEventListener('click', () => {
+                openCamera(currentFacingMode);
+            });
+
+            // ✅✅✅ Bouton Valider ✅ → confirme et ajoute comme sticker
+            confirmBtn.addEventListener('click', () => {
+                confirmPhoto();
+            });
+
+            // ✅✅✅ Empêcher le panneau caméra de déclencher le dessin
+            cameraPanel.addEventListener('touchstart', (e) => e.stopPropagation());
+            cameraPanel.addEventListener('mousedown', (e) => e.stopPropagation());
+        }
 
         init();
     </script>
 </body>
 </html>
-
