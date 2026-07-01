@@ -6,12 +6,14 @@
     <title>Dessiner avec du Brouillard</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background: #0a0a12; 
-            touch-action: none; 
+            background: #0a0a12;
+            touch-action: none;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
@@ -20,249 +22,329 @@
 
         canvas {
             display: block;
+            cursor: crosshair;
         }
 
-        /* ============================================================
-           ✅ MODIFIÉ : TOOLBAR EN UNE SEULE LIGNE
-           - Sur mobile : en bas de l'écran, scrollable horizontalement
-           - Sur desktop : en haut comme avant
-           - Boutons compacts pour maximiser l'espace de dessin
-           ============================================================ */
+        /* ─── CUSTOM CURSOR ─── */
+        #cursorRing {
+            position: fixed;
+            top: 0; left: 0;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.7);
+            pointer-events: none;
+            transform: translate(-50%,-50%);
+            z-index: 9999;
+            transition: width .1s, height .1s, opacity .2s;
+            mix-blend-mode: difference;
+        }
+
+        /* ─── TOOLBAR ─── */
         .toolbar {
-            position: absolute;
+            position: fixed;
             top: 15px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(30, 30, 45, 0.75);
-            padding: 8px 12px;
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(20, 20, 35, 0.85);
+            padding: 8px 14px;
+            border-radius: 28px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.12);
             z-index: 20;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.4);
             flex-wrap: nowrap;
-            justify-content: flex-start;
-            max-width: 95%;
+            max-width: calc(100vw - 20px);
             overflow-x: auto;
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
+        .toolbar::-webkit-scrollbar { display: none; }
 
-        .toolbar::-webkit-scrollbar {
-            display: none;
+        .tool-sep {
+            width: 1px;
+            height: 28px;
+            background: rgba(255,255,255,0.15);
+            flex-shrink: 0;
         }
 
         .tool-group {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             flex-shrink: 0;
         }
 
         .tool-label {
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.55);
             font-size: 11px;
+            flex-shrink: 0;
         }
 
+        /* Size slider */
         #sizeSlider {
-            width: 60px;
+            width: 65px;
             accent-color: #00d2ff;
             cursor: pointer;
         }
 
+        /* Color picker */
         #colorPicker {
-            width: 25px;
-            height: 25px;
+            width: 28px;
+            height: 28px;
             border: none;
             border-radius: 50%;
             background: none;
             cursor: pointer;
             padding: 0;
             overflow: hidden;
-        }
-        #colorPicker::-webkit-color-swatch-wrapper { padding: 0; }
-        #colorPicker::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; }
-
-        .btn {
-            padding: 6px 10px;
-            border: none;
-            border-radius: 15px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
             flex-shrink: 0;
         }
+        #colorPicker::-webkit-color-swatch-wrapper { padding: 0; }
+        #colorPicker::-webkit-color-swatch {
+            border: 2.5px solid rgba(255,255,255,0.55);
+            border-radius: 50%;
+        }
 
-        #clearBtn { background: rgba(255, 80, 80, 0.2); color: white; border: 1px solid rgba(255, 80, 80, 0.4); }
-        #clearBtn:active { background: rgba(255, 80, 80, 0.5); }
+        /* Color preview dot */
+        #colorDot {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            flex-shrink: 0;
+            pointer-events: none;
+            transition: background .15s;
+        }
 
-        #saveBtn { background: rgba(80, 255, 120, 0.2); color: white; border: 1px solid rgba(80, 255, 120, 0.4); }
-        #saveBtn:active { background: rgba(80, 255, 120, 0.5); }
+        /* Brush preview */
+        #brushPreview {
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+        #brushDot {
+            border-radius: 50%;
+            background: currentColor;
+            transition: width .1s, height .1s;
+        }
 
-        #sendEmailBtn { background: rgba(100, 150, 255, 0.3); color: white; border: 1px solid rgba(100, 150, 255, 0.6); }
-        #sendEmailBtn:active { background: rgba(100, 150, 255, 0.6); }
-        
-        #stickerBtn { background: rgba(255, 200, 50, 0.2); color: white; border: 1px solid rgba(255, 200, 50, 0.4); }
-        #stickerBtn:active { background: rgba(255, 200, 50, 0.5); }
-
-        #galleryBtn { background: rgba(200, 100, 255, 0.2); color: white; border: 1px solid rgba(200, 100, 255, 0.4); }
-        #galleryBtn:active { background: rgba(200, 100, 255, 0.5); }
-
-        #emojiBtn { background: rgba(255, 150, 50, 0.2); color: white; border: 1px solid rgba(255, 150, 50, 0.4); }
-        #emojiBtn:active { background: rgba(255, 150, 50, 0.5); }
-
-        #selfieBtn { background: rgba(255, 80, 180, 0.25); color: white; border: 1px solid rgba(255, 80, 180, 0.5); }
-        #selfieBtn:active { background: rgba(255, 80, 180, 0.6); }
-
-        #info {
+        /* Buttons */
+        .btn {
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            font-size: 17px;
+            cursor: pointer;
+            transition: transform .15s, filter .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .btn:active { transform: scale(0.88); }
+        .btn.active-tool::after {
+            content: '';
             position: absolute;
-            bottom: 20px;
+            bottom: -4px;
+            left: 50%; transform: translateX(-50%);
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: #00d2ff;
+        }
+
+        #eraserBtn  { background: rgba(255,255,255,0.1);  border: 1px solid rgba(255,255,255,0.2); }
+        #undoBtn    { background: rgba(180,180,255,0.15); border: 1px solid rgba(180,180,255,0.3); }
+        #clearBtn   { background: rgba(255,80,80,0.18);   border: 1px solid rgba(255,80,80,0.35); }
+        #saveBtn    { background: rgba(80,255,120,0.18);  border: 1px solid rgba(80,255,120,0.35); }
+        #sendEmailBtn{ background: rgba(100,150,255,0.25);border: 1px solid rgba(100,150,255,0.5); }
+        #stickerBtn { background: rgba(255,200,50,0.18);  border: 1px solid rgba(255,200,50,0.35); }
+        #galleryBtn { background: rgba(200,100,255,0.18); border: 1px solid rgba(200,100,255,0.35); }
+        #emojiBtn   { background: rgba(255,150,50,0.18);  border: 1px solid rgba(255,150,50,0.35); }
+        #selfieBtn  { background: rgba(255,80,180,0.2);   border: 1px solid rgba(255,80,180,0.4); }
+
+        /* ─── INFO BAR ─── */
+        #info {
+            position: fixed;
+            bottom: 22px;
             width: 100%;
             text-align: center;
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.25);
             font-size: 13px;
+            pointer-events: none;
+            z-index: 5;
+            transition: opacity .3s;
+        }
+
+        /* ─── UNDO HINT ─── */
+        #undoHint {
+            position: fixed;
+            bottom: 45px;
+            right: 16px;
+            color: rgba(255,255,255,0.2);
+            font-size: 11px;
             pointer-events: none;
             z-index: 5;
         }
 
+        /* ─── NOTIFICATION ─── */
         .notification {
             position: fixed;
-            top: 50%;
+            top: 80px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
+            transform: translateX(-50%) translateY(-8px);
+            background: rgba(15,15,25,0.92);
             color: white;
-            padding: 20px 30px;
-            border-radius: 10px;
-            font-size: 14px;
-            z-index: 100;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            z-index: 150;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s;
+            transition: opacity .25s, transform .25s;
             text-align: center;
             max-width: 80%;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
         }
-        .notification.show { opacity: 1; }
+        .notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
 
+        /* ─── LOADING ─── */
         .loading {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
+            top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            background: rgba(10,10,20,0.95);
             color: white;
             padding: 30px 40px;
-            border-radius: 10px;
-            font-size: 16px;
-            z-index: 100;
+            border-radius: 16px;
+            font-size: 15px;
+            z-index: 160;
             display: none;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .loading.show { display: block; }
+        .loading::after {
+            content: '';
+            display: block;
+            width: 24px; height: 24px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #00d2ff;
+            border-radius: 50%;
+            margin: 12px auto 0;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        #stickerPanel {
+        /* ─── BOTTOM PANELS ─── */
+        .bottom-panel {
             position: fixed;
-            bottom: 0;
-            left: 0;
+            bottom: 0; left: 0;
             width: 100%;
-            background: rgba(20, 20, 30, 0.95);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding: 15px;
+            background: rgba(14,14,24,0.97);
+            border-top-left-radius: 22px;
+            border-top-right-radius: 22px;
+            padding: 16px 16px 24px;
             z-index: 50;
             transform: translateY(110%);
-            transition: transform 0.3s ease-out;
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.1);
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255,255,255,0.09);
         }
-        #stickerPanel.open {
-            transform: translateY(0);
-        }
+        .bottom-panel.open { transform: translateY(0); }
 
-        .sticker-header {
+        .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             color: white;
         }
-        .sticker-header h3 { margin: 0; font-size: 16px; }
-        .close-stickers {
+        .panel-header h3 { margin: 0; font-size: 15px; }
+
+        .close-panel-btn {
             background: rgba(255,255,255,0.1);
             border: none;
             color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
+            padding: 5px 12px;
+            border-radius: 14px;
             cursor: pointer;
+            font-size: 13px;
         }
 
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+        }
+        .size-control input[type="range"] {
+            flex: 1;
+        }
+        .size-control span:last-child {
+            min-width: 38px;
+            text-align: right;
+        }
+
+        /* ─── STICKER GRID ─── */
         .sticker-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            max-height: 40vh;
+            gap: 12px;
+            max-height: 38vh;
             overflow-y: auto;
-            padding-bottom: 20px;
+            padding-bottom: 8px;
         }
 
         .sticker-item {
             aspect-ratio: 1;
             background: rgba(255,255,255,0.05);
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
+            transition: transform .18s, background .18s;
             overflow: hidden;
             position: relative;
+            border: 1px solid rgba(255,255,255,0.06);
         }
         .sticker-item:active {
-            transform: scale(0.95);
-            background: rgba(255,255,255,0.2);
+            transform: scale(0.92);
+            background: rgba(255,255,255,0.15);
         }
         .sticker-item img {
-            width: 80%;
-            height: 80%;
+            width: 78%;
+            height: 78%;
             object-fit: contain;
             pointer-events: none;
         }
 
-        #emojiPanel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(20, 20, 30, 0.95);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding: 15px;
-            z-index: 50;
-            transform: translateY(110%);
-            transition: transform 0.3s ease-out;
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        #emojiPanel.open {
-            transform: translateY(0);
-        }
-
+        /* ─── EMOJI GRID ─── */
         .emoji-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
-            max-height: 45vh;
+            gap: 8px;
+            max-height: 42vh;
             overflow-y: auto;
-            padding-bottom: 20px;
+            padding-bottom: 8px;
         }
-
         .emoji-item {
             aspect-ratio: 1;
             background: rgba(255,255,255,0.05);
@@ -271,62 +353,35 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            font-size: 32px;
-            transition: transform 0.2s, background 0.2s;
+            font-size: 28px;
+            transition: transform .15s, background .15s;
         }
         .emoji-item:active {
-            transform: scale(0.9);
-            background: rgba(255,255,255,0.2);
+            transform: scale(0.88);
+            background: rgba(255,255,255,0.18);
         }
 
-        .sticker-size-control {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            color: white;
-            font-size: 12px;
-        }
-        .sticker-size-control input[type="range"] {
-            flex: 1;
-            accent-color: #ff9933;
-        }
-
-        /* ============================================================
-           ✅ NOUVEAU : BADGE INDICATEUR TYPE (Selfie / Galerie)
-           - Petit badge en haut à gauche de l'image
-           - 📷 pour selfie, 🖼️ pour galerie
-           ============================================================ */
+        /* ─── BADGES & REMOVE BTN ─── */
         .sticker-badge {
             position: absolute;
-            top: 3px;
-            left: 3px;
-            background: rgba(0,0,0,0.7);
+            top: 3px; left: 3px;
+            background: rgba(0,0,0,0.65);
             color: white;
-            font-size: 10px;
+            font-size: 9px;
             padding: 2px 5px;
             border-radius: 8px;
             pointer-events: none;
             z-index: 2;
         }
-
-        /* ============================================================
-           ✅ NOUVEAU : BOUTON SUPPRESSION AMÉLIORÉ
-           - Plus gros et plus visible
-           - En haut à droite
-           - Effet rouge au survol
-           ============================================================ */
         .sticker-remove-btn {
             position: absolute;
-            top: 3px;
-            right: 3px;
-            background: rgba(255, 50, 50, 0.85);
-            border: 1.5px solid white;
+            top: 3px; right: 3px;
+            background: rgba(220,40,40,0.88);
+            border: 1.5px solid rgba(255,255,255,0.8);
             color: white;
-            width: 22px;
-            height: 22px;
+            width: 22px; height: 22px;
             border-radius: 50%;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
@@ -334,95 +389,63 @@
             justify-content: center;
             z-index: 3;
             box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-            transition: transform 0.15s, background 0.15s;
+            transition: transform .12s, background .12s;
             padding: 0;
             line-height: 1;
         }
         .sticker-remove-btn:active {
-            transform: scale(0.85);
-            background: rgba(200, 0, 0, 1);
+            transform: scale(0.82);
+            background: rgba(180,0,0,1);
         }
 
-        /* ============================================================
-           ✅ NOUVEAU : MODAL DE CONFIRMATION SUPPRESSION
-           - Apparaît quand on clique sur la poubelle
-           - Évite les suppressions accidentelles
-           ============================================================ */
+        /* ─── CONFIRM MODAL ─── */
         .confirm-modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
+            inset: 0;
+            background: rgba(0,0,0,0.72);
             z-index: 300;
             display: none;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
         }
-        .confirm-modal.show {
-            display: flex;
-        }
+        .confirm-modal.show { display: flex; }
         .confirm-box {
-            background: #1e1e2d;
-            border-radius: 15px;
-            padding: 25px;
+            background: #17172a;
+            border-radius: 18px;
+            padding: 26px;
             max-width: 320px;
-            width: 85%;
+            width: 88%;
             text-align: center;
             border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            box-shadow: 0 16px 50px rgba(0,0,0,0.55);
         }
-        .confirm-box h3 {
-            color: white;
-            margin: 0 0 10px 0;
-            font-size: 16px;
-        }
-        .confirm-box p {
-            color: rgba(255,255,255,0.7);
-            margin: 0 0 20px 0;
-            font-size: 13px;
-        }
+        .confirm-box h3 { color: white; margin: 0 0 12px; font-size: 16px; }
+        .confirm-box p  { color: rgba(255,255,255,0.6); margin: 0 0 18px; font-size: 13px; }
         .confirm-preview {
-            width: 100px;
-            height: 100px;
-            border-radius: 10px;
+            width: 96px; height: 96px;
+            border-radius: 12px;
             object-fit: cover;
-            margin-bottom: 15px;
-            border: 2px solid rgba(255,255,255,0.2);
+            margin-bottom: 14px;
+            border: 2px solid rgba(255,255,255,0.15);
         }
-        .confirm-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
+        .confirm-buttons { display: flex; gap: 10px; justify-content: center; }
         .confirm-buttons button {
-            padding: 10px 20px;
+            padding: 10px 22px;
             border-radius: 20px;
             border: none;
             font-size: 13px;
             cursor: pointer;
             font-weight: 600;
         }
-        .confirm-cancel {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-        .confirm-delete {
-            background: rgba(255, 50, 50, 0.9);
-            color: white;
-        }
+        .confirm-cancel { background: rgba(255,255,255,0.1); color: white; }
+        .confirm-delete { background: rgba(220,40,40,0.92); color: white; }
 
-        /* ============================================================
-           ✅ NOUVEAU : OVERLAY APPAREIL PHOTO
-           ============================================================ */
+        /* ─── CAMERA OVERLAY ─── */
         #cameraOverlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             background: black;
             z-index: 200;
             display: none;
@@ -430,117 +453,80 @@
             align-items: center;
             justify-content: center;
         }
-        #cameraOverlay.show {
-            display: flex;
-        }
-
+        #cameraOverlay.show { display: flex; }
         #cameraVideo {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: cover;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
         }
-
         #cameraFlash {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: absolute; inset: 0;
             background: white;
             opacity: 0;
             pointer-events: none;
             z-index: 202;
-            transition: opacity 0.3s;
+            transition: opacity .25s;
         }
-        #cameraFlash.flash {
-            opacity: 1;
-        }
-
+        #cameraFlash.flash { opacity: 1; }
         #cameraPreview {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
             object-fit: contain;
             display: none;
             z-index: 201;
             background: black;
         }
-
         .camera-top-bar {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+            top: 0; left: 0; width: 100%;
             padding: 15px;
             padding-top: max(15px, env(safe-area-inset-top));
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 203;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
         }
-
         .camera-close-btn, .camera-switch-btn {
             background: rgba(0,0,0,0.5);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
+            border: none; color: white;
+            width: 42px; height: 42px;
             border-radius: 50%;
-            font-size: 20px;
+            font-size: 19px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
         }
-
         .camera-title {
-            color: white;
-            font-size: 14px;
+            color: white; font-size: 14px;
             background: rgba(0,0,0,0.5);
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 15px;
         }
-
         .camera-bottom-bar {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 30px;
-            padding-bottom: max(30px, env(safe-area-inset-bottom));
+            bottom: 0; left: 0; width: 100%;
+            padding: 32px;
+            padding-bottom: max(32px, env(safe-area-inset-bottom));
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 30px;
             z-index: 203;
             background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
         }
-
         .capture-btn {
-            width: 75px;
-            height: 75px;
+            width: 76px; height: 76px;
             border-radius: 50%;
             background: white;
-            border: 5px solid rgba(255,255,255,0.5);
+            border: 5px solid rgba(255,255,255,0.45);
             box-shadow: 0 0 0 4px rgba(0,0,0,0.3);
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: transform .1s;
         }
-        .capture-btn:active {
-            transform: scale(0.9);
-        }
-
+        .capture-btn:active { transform: scale(0.88); }
         .camera-confirm-bar {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
+            bottom: 0; left: 0; width: 100%;
             padding: 30px;
             padding-bottom: max(30px, env(safe-area-inset-bottom));
             display: none;
@@ -549,169 +535,117 @@
             z-index: 203;
             background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
         }
-        .camera-confirm-bar.show {
-            display: flex;
-        }
-
+        .camera-confirm-bar.show { display: flex; }
         .camera-action-btn {
             background: rgba(0,0,0,0.5);
             border: 2px solid white;
             color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
+            padding: 12px 22px;
+            border-radius: 26px;
             font-size: 14px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            display: flex; align-items: center; gap: 6px;
         }
-        .camera-action-btn.primary {
-            background: white;
-            color: black;
-        }
-
+        .camera-action-btn.primary { background: white; color: black; }
         .camera-error {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            text-align: center;
-            padding: 20px;
-            display: none;
-            z-index: 204;
-            max-width: 80%;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            color: white; text-align: center;
+            padding: 24px; display: none;
+            z-index: 204; max-width: 82%;
         }
         .camera-error.show { display: block; }
-        .camera-error h3 { margin: 0 0 10px 0; font-size: 18px; }
-        .camera-error p { margin: 0 0 15px 0; opacity: 0.7; font-size: 13px; }
+        .camera-error h3 { margin: 0 0 10px; font-size: 18px; }
+        .camera-error p  { margin: 0 0 16px; opacity: .7; font-size: 13px; }
         .camera-error button {
-            background: white;
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
+            background: white; color: black;
+            border: none; padding: 10px 22px;
+            border-radius: 20px; cursor: pointer; font-size: 14px;
         }
 
-        /* ============================================================
-           ✅ MODIFIÉ : MEDIA QUERIES MOBILE
-           - Toolbar en bas de l'écran sur mobile
-           - Boutons compacts (juste icônes)
-           - Une seule ligne, scrollable horizontalement
-           ============================================================ */
+        /* ─── MOBILE OVERRIDES ─── */
         @media (max-width: 768px) {
             .toolbar {
                 top: auto;
-                bottom: 10px;
+                bottom: 12px;
                 left: 10px;
                 right: 10px;
                 transform: none;
                 max-width: none;
                 padding: 6px 10px;
-                gap: 6px;
-                border-radius: 20px;
+                gap: 5px;
+                border-radius: 22px;
             }
-
-            .btn {
-                padding: 8px 10px;
-                font-size: 16px;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                justify-content: center;
-            }
-
-            /* Masquer le texte des boutons sur mobile, garder juste l'icône */
-            .btn-text {
-                display: none;
-            }
-
-            .tool-label {
-                font-size: 10px;
-            }
-
-            #sizeSlider {
-                width: 50px;
-            }
-
-            #colorPicker {
-                width: 28px;
-                height: 28px;
-            }
-
-            #info {
-                bottom: 75px; /* Remonté pour ne pas chevaucher la toolbar */
-            }
-
-            .sticker-grid {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-            }
-
-            .emoji-grid {
-                grid-template-columns: repeat(5, 1fr);
-            }
+            .btn { width: 40px; height: 40px; font-size: 18px; }
+            .btn-text { display: none; }
+            #sizeSlider { width: 52px; }
+            #colorPicker { width: 30px; height: 30px; }
+            #info { bottom: 72px; }
+            #undoHint { bottom: 80px; }
+            #cursorRing { display: none; }
+            .sticker-grid { grid-template-columns: repeat(4, 1fr); }
+            .emoji-grid { grid-template-columns: repeat(5, 1fr); }
         }
-
-        /* Très petits écrans (iPhone SE, etc.) */
         @media (max-width: 380px) {
-            .btn {
-                width: 36px;
-                height: 36px;
-                font-size: 14px;
-                padding: 6px;
-            }
-            #sizeSlider {
-                width: 40px;
-            }
+            .btn { width: 35px; height: 35px; font-size: 15px; }
+            #sizeSlider { width: 42px; }
         }
     </style>
 </head>
 <body>
 
-    <canvas id="fogCanvas"></canvas>
+    <canvas id="fogCanvas" aria-label="Espace de dessin interactif" role="img"></canvas>
+    <div id="cursorRing" aria-hidden="true"></div>
 
-    <!-- ============================================================
-         ✅ MODIFIÉ : TOOLBAR EN UNE SEULE LIGNE
-         - Texte masqué sur mobile (juste icônes)
-         - Scroll horizontal si nécessaire
-         - En bas sur mobile pour ergonomie pouce
-         ============================================================ -->
-    <div class="toolbar">
-        <div class="tool-group">
-            <span class="tool-label">✏️</span>
-            <input type="range" id="sizeSlider" min="5" max="120" value="25">
+    <!-- TOOLBAR -->
+    <div class="toolbar" role="toolbar" aria-label="Outils de dessin">
+
+        <div class="tool-group" title="Taille du pinceau">
+            <div id="brushPreview" aria-hidden="true">
+                <div id="brushDot"></div>
+            </div>
+            <input type="range" id="sizeSlider" min="5" max="120" value="25"
+                   aria-label="Taille du pinceau">
         </div>
-        
+
+        <div class="tool-sep"></div>
+
         <div class="tool-group">
-            <span class="tool-label">🎨</span>
-            <input type="color" id="colorPicker" value="#d2e6ff">
+            <input type="color" id="colorPicker" value="#d2e6ff" aria-label="Couleur du pinceau">
+            <div id="colorDot" aria-hidden="true"></div>
         </div>
-        
-        <button id="stickerBtn" class="btn" title="Autocollants">🏷️<span class="btn-text"> Autocollants</span></button>
-        <button id="galleryBtn" class="btn" title="Galerie">🖼️<span class="btn-text"> Galerie</span></button>
-        <button id="emojiBtn" class="btn" title="Emoji">😀<span class="btn-text"> Emoji</span></button>
-        <button id="selfieBtn" class="btn" title="Selfie">📷<span class="btn-text"> Selfie</span></button>
-        <button id="sendEmailBtn" class="btn" title="Envoyer">📧<span class="btn-text"> Envoyer</span></button>
-        <button id="saveBtn" class="btn" title="Sauvegarder">💾<span class="btn-text"> Sauvegarder</span></button>
-        <button id="clearBtn" class="btn" title="Effacer">🗑️<span class="btn-text"> Effacer</span></button>
+
+        <div class="tool-sep"></div>
+
+        <button id="eraserBtn"   class="btn" title="Gomme (E)"   aria-label="Gomme">🧹</button>
+        <button id="undoBtn"     class="btn" title="Annuler (Ctrl+Z)" aria-label="Annuler">↩️</button>
+
+        <div class="tool-sep"></div>
+
+        <button id="stickerBtn"  class="btn" title="Autocollants" aria-label="Autocollants">🏷️</button>
+        <button id="galleryBtn"  class="btn" title="Galerie"       aria-label="Ajouter depuis la galerie">🖼️</button>
+        <button id="emojiBtn"    class="btn" title="Emojis"        aria-label="Emojis">😀</button>
+        <button id="selfieBtn"   class="btn" title="Selfie"        aria-label="Prendre un selfie">📷</button>
+
+        <div class="tool-sep"></div>
+
+        <button id="sendEmailBtn" class="btn" title="Envoyer par email" aria-label="Envoyer par email">📧</button>
+        <button id="saveBtn"      class="btn" title="Sauvegarder"        aria-label="Sauvegarder">💾</button>
+        <button id="clearBtn"     class="btn" title="Tout effacer"       aria-label="Effacer le dessin">🗑️</button>
     </div>
 
     <input type="file" id="galleryInput" accept="image/*" multiple style="display:none;">
 
-    <div id="info">Dessine ou écris avec ton doigt ✨</div>
-    <div id="notification" class="notification"></div>
-    <div id="loading" class="loading"> Envoi en cours...</div>
+    <div id="info" aria-live="polite">Dessine ou écris avec ton doigt ✨</div>
+    <div id="undoHint" aria-hidden="true">Ctrl+Z pour annuler</div>
+    <div id="notification" class="notification" role="status" aria-live="polite"></div>
+    <div id="loading"       class="loading" role="status" aria-live="polite">Envoi en cours…</div>
 
-    <!-- ============================================================
-         ✅ NOUVEAU : MODAL DE CONFIRMATION SUPPRESSION
-         ============================================================ -->
-    <div class="confirm-modal" id="confirmModal">
+    <!-- CONFIRM DELETE MODAL -->
+    <div class="confirm-modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
         <div class="confirm-box">
-            <h3>🗑️ Supprimer cette image ?</h3>
-            <img id="confirmPreview" class="confirm-preview" alt="preview">
+            <h3 id="confirmTitle">🗑️ Supprimer cette image ?</h3>
+            <img id="confirmPreview" class="confirm-preview" alt="Aperçu de l'image à supprimer">
             <p>Cette action est irréversible.</p>
             <div class="confirm-buttons">
                 <button class="confirm-cancel" id="confirmCancel">Annuler</button>
@@ -720,53 +654,52 @@
         </div>
     </div>
 
-    <div id="stickerPanel">
-        <div class="sticker-header">
+    <!-- STICKER PANEL -->
+    <div id="stickerPanel" class="bottom-panel" role="dialog" aria-label="Panneau d'autocollants">
+        <div class="panel-header">
             <h3>✨ Choisis un autocollant</h3>
-            <button class="close-stickers" id="closeStickerBtn">Fermer ✖</button>
+            <button class="close-panel-btn" id="closeStickerBtn" aria-label="Fermer">Fermer ✖</button>
         </div>
-        <div class="sticker-size-control">
+        <div class="size-control">
             <span>Taille :</span>
-            <input type="range" id="stickerSizeSlider" min="50" max="400" value="150">
+            <input type="range" id="stickerSizeSlider" min="50" max="400" value="150" aria-label="Taille de l'autocollant">
             <span id="stickerSizeValue">150px</span>
         </div>
         <div class="sticker-grid" id="stickerGrid"></div>
     </div>
 
-    <div id="emojiPanel">
-        <div class="sticker-header">
+    <!-- EMOJI PANEL -->
+    <div id="emojiPanel" class="bottom-panel" role="dialog" aria-label="Panneau d'emojis">
+        <div class="panel-header">
             <h3>😀 Choisis un emoji</h3>
-            <button class="close-stickers" id="closeEmojiBtn">Fermer ✖</button>
+            <button class="close-panel-btn" id="closeEmojiBtn" aria-label="Fermer">Fermer ✖</button>
         </div>
-        <div class="sticker-size-control">
+        <div class="size-control">
             <span>Taille :</span>
-            <input type="range" id="emojiSizeSlider" min="30" max="300" value="80">
+            <input type="range" id="emojiSizeSlider" min="30" max="300" value="80" aria-label="Taille de l'emoji">
             <span id="emojiSizeValue">80px</span>
         </div>
         <div class="emoji-grid" id="emojiGrid"></div>
     </div>
 
-    <div id="cameraOverlay">
+    <!-- CAMERA OVERLAY -->
+    <div id="cameraOverlay" role="dialog" aria-label="Appareil photo">
         <video id="cameraVideo" autoplay playsinline muted></video>
-        <img id="cameraPreview" alt="preview">
-        <div id="cameraFlash"></div>
-
+        <img id="cameraPreview" alt="Photo prise">
+        <div id="cameraFlash" aria-hidden="true"></div>
         <div class="camera-top-bar">
-            <button class="camera-close-btn" id="cameraCloseBtn">✕</button>
+            <button class="camera-close-btn" id="cameraCloseBtn" aria-label="Fermer la caméra">✕</button>
             <div class="camera-title" id="cameraTitle">📷 Selfie</div>
-            <button class="camera-switch-btn" id="cameraSwitchBtn">🔄</button>
+            <button class="camera-switch-btn" id="cameraSwitchBtn" aria-label="Changer de caméra">🔄</button>
         </div>
-
         <div class="camera-bottom-bar" id="cameraBottomBar">
-            <button class="capture-btn" id="captureBtn"></button>
+            <button class="capture-btn" id="captureBtn" aria-label="Prendre une photo"></button>
         </div>
-
         <div class="camera-confirm-bar" id="cameraConfirmBar">
             <button class="camera-action-btn" id="retakeBtn">🔄 Refaire</button>
             <button class="camera-action-btn primary" id="usePhotoBtn">✅ Utiliser</button>
         </div>
-
-        <div class="camera-error" id="cameraError">
+        <div class="camera-error" id="cameraError" role="alert">
             <h3>📷 Caméra indisponible</h3>
             <p id="cameraErrorMsg">Impossible d'accéder à la caméra.</p>
             <button id="cameraErrorClose">Fermer</button>
@@ -774,696 +707,812 @@
     </div>
 
     <script type="text/javascript">
-        emailjs.init("2HSpDxAF3uZuAKH-l");
-        const SERVICE_ID = "service_ctymr5f";
-        const TEMPLATE_ID = "template_wc1x8ag";
-        const TO_EMAIL = "insim5628@gmail.com";
+    // ════════════════════════════════════════════════════════════
+    //  CONFIG EMAILJS
+    // ════════════════════════════════════════════════════════════
+    emailjs.init("2HSpDxAF3uZuAKH-l");
+    const SERVICE_ID  = "service_ctymr5f";
+    const TEMPLATE_ID = "template_wc1x8ag";
+    const TO_EMAIL    = "insim5628@gmail.com";
 
-        const canvas = document.getElementById('fogCanvas');
-        const ctx = canvas.getContext('2d');
-        const clearBtn = document.getElementById('clearBtn');
-        const saveBtn = document.getElementById('saveBtn');
-        const sendEmailBtn = document.getElementById('sendEmailBtn');
-        const stickerBtn = document.getElementById('stickerBtn');
-        const stickerPanel = document.getElementById('stickerPanel');
-        const closeStickerBtn = document.getElementById('closeStickerBtn');
-        const stickerGrid = document.getElementById('stickerGrid');
-        const sizeSlider = document.getElementById('sizeSlider');
-        const colorPicker = document.getElementById('colorPicker');
-        const notification = document.getElementById('notification');
-        const loading = document.getElementById('loading');
-        const galleryBtn = document.getElementById('galleryBtn');
-        const galleryInput = document.getElementById('galleryInput');
-        const emojiBtn = document.getElementById('emojiBtn');
-        const emojiPanel = document.getElementById('emojiPanel');
-        const closeEmojiBtn = document.getElementById('closeEmojiBtn');
-        const emojiGrid = document.getElementById('emojiGrid');
-        const stickerSizeSlider = document.getElementById('stickerSizeSlider');
-        const stickerSizeValue = document.getElementById('stickerSizeValue');
-        const emojiSizeSlider = document.getElementById('emojiSizeSlider');
-        const emojiSizeValue = document.getElementById('emojiSizeValue');
+    // ════════════════════════════════════════════════════════════
+    //  DOM REFS
+    // ════════════════════════════════════════════════════════════
+    const canvas        = document.getElementById('fogCanvas');
+    const ctx           = canvas.getContext('2d');
+    const cursorRing    = document.getElementById('cursorRing');
 
-        const selfieBtn = document.getElementById('selfieBtn');
-        const cameraOverlay = document.getElementById('cameraOverlay');
-        const cameraVideo = document.getElementById('cameraVideo');
-        const cameraPreview = document.getElementById('cameraPreview');
-        const cameraFlash = document.getElementById('cameraFlash');
-        const cameraCloseBtn = document.getElementById('cameraCloseBtn');
-        const cameraSwitchBtn = document.getElementById('cameraSwitchBtn');
-        const cameraTitle = document.getElementById('cameraTitle');
-        const cameraBottomBar = document.getElementById('cameraBottomBar');
-        const cameraConfirmBar = document.getElementById('cameraConfirmBar');
-        const captureBtn = document.getElementById('captureBtn');
-        const retakeBtn = document.getElementById('retakeBtn');
-        const usePhotoBtn = document.getElementById('usePhotoBtn');
-        const cameraError = document.getElementById('cameraError');
-        const cameraErrorMsg = document.getElementById('cameraErrorMsg');
-        const cameraErrorClose = document.getElementById('cameraErrorClose');
+    const sizeSlider    = document.getElementById('sizeSlider');
+    const colorPicker   = document.getElementById('colorPicker');
+    const colorDot      = document.getElementById('colorDot');
+    const brushDot      = document.getElementById('brushDot');
 
-        // ✅ NOUVEAU : Références modal de confirmation
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmPreview = document.getElementById('confirmPreview');
-        const confirmCancel = document.getElementById('confirmCancel');
-        const confirmDelete = document.getElementById('confirmDelete');
+    const eraserBtn     = document.getElementById('eraserBtn');
+    const undoBtn       = document.getElementById('undoBtn');
+    const clearBtn      = document.getElementById('clearBtn');
+    const saveBtn       = document.getElementById('saveBtn');
+    const sendEmailBtn  = document.getElementById('sendEmailBtn');
+    const stickerBtn    = document.getElementById('stickerBtn');
+    const galleryBtn    = document.getElementById('galleryBtn');
+    const emojiBtn      = document.getElementById('emojiBtn');
+    const selfieBtn     = document.getElementById('selfieBtn');
 
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-        let currentSize = 25;
-        let currentColorHex = '#d2e6ff';
+    const stickerPanel      = document.getElementById('stickerPanel');
+    const closeStickerBtn   = document.getElementById('closeStickerBtn');
+    const stickerGrid       = document.getElementById('stickerGrid');
+    const stickerSizeSlider = document.getElementById('stickerSizeSlider');
+    const stickerSizeValue  = document.getElementById('stickerSizeValue');
 
-        let activeStickerImg = null;
-        let stickerMode = false;
-        let currentStickerSize = 150;
-        let currentEmojiSize = 80;
-        
-        const stickers = [
-            { name: "d1", url: "douaa1.png" },
-            { name: "dou7", url: "dou7.png" },
-            { name: "dou2", url: "dou2.png" },
-            { name: "dou8", url: "dou8.png" },
-            { name: "dou6", url: "dou6.png" },
-            { name: "dou4", url: "dou4.png" },
-            { name: "dou5", url: "dou5.png" },
-            { name: "dou3", url: "dou3.png" },
-            { name: "lion1", url: "liondou.png" },
-            { name: "lion", url: "liondo.png" },
-        ];
+    const emojiPanel        = document.getElementById('emojiPanel');
+    const closeEmojiBtn     = document.getElementById('closeEmojiBtn');
+    const emojiGrid         = document.getElementById('emojiGrid');
+    const emojiSizeSlider   = document.getElementById('emojiSizeSlider');
+    const emojiSizeValue    = document.getElementById('emojiSizeValue');
 
-        const emojiCategories = {
-            "Visages": ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🥵","🥶","🥴","😵","🤯","🤠","🥳","😎","🤓","🧐"],
-            "Gestes": ["👋","🤚","🖐️","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","💪","🦾","🖤","🤍","🤎","💔","❤️","🧡","💛","💚","💙","💜","💕","💞","💓","💗","💖","💘","💝","💟","♥️","💯","💢","💥","💫","💦","💨"],
-            "Animaux": ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐢","🐍","🦎","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🐈","🐓"],
-            "Nature": ["🌸","🌹","🥀","🌺","🌻","🌼","🌷","🌱","🌲","🌳","🌴","🌵","🌾","🌿","☘️","🍀","🍁","🍂","🍃","🍄","🌍","🌕","🌙","☀️","⭐","🌟","🌠","☁️","⛅","🌈","❄️","☃️","⛄","🔥","✨","🌊","💧","⚡"],
-            "Nourriture": ["🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🍕","🍔","🍟","🌭","🍿","🍩","🍪","🍰","🎂","🍫","🍬","🍭"],
-            "Objets": ["⌚","📱","💻","📷","📸","🎥","📞","📺","📻","💡","🔦","🔋","💰","💎","🎁","🎈","🎉","🎊","✉️","📦","🔑","🔒","✂️","📝","✏️","🔍","🔎"]
-        };
+    const galleryInput   = document.getElementById('galleryInput');
+    const notification   = document.getElementById('notification');
+    const loading        = document.getElementById('loading');
 
-        // ============================================================
-        // ✅ MODIFIÉ : STRUCTURE DES IMAGES GALERIE AMÉLIORÉE
-        // Chaque image a maintenant : { dataUrl, type: 'selfie'|'gallery' }
-        // ============================================================
-        let galleryImages = [];
-        let pendingDeleteIndex = null; // ✅ NOUVEAU : index en attente de suppression
+    const confirmModal   = document.getElementById('confirmModal');
+    const confirmPreview = document.getElementById('confirmPreview');
+    const confirmCancel  = document.getElementById('confirmCancel');
+    const confirmDelete  = document.getElementById('confirmDelete');
 
-        let currentStream = null;
-        let currentFacingMode = 'user';
-        let capturedPhotoDataUrl = null;
+    const cameraOverlay    = document.getElementById('cameraOverlay');
+    const cameraVideo      = document.getElementById('cameraVideo');
+    const cameraPreview    = document.getElementById('cameraPreview');
+    const cameraFlash      = document.getElementById('cameraFlash');
+    const cameraCloseBtn   = document.getElementById('cameraCloseBtn');
+    const cameraSwitchBtn  = document.getElementById('cameraSwitchBtn');
+    const cameraTitle      = document.getElementById('cameraTitle');
+    const cameraBottomBar  = document.getElementById('cameraBottomBar');
+    const cameraConfirmBar = document.getElementById('cameraConfirmBar');
+    const captureBtn       = document.getElementById('captureBtn');
+    const retakeBtn        = document.getElementById('retakeBtn');
+    const usePhotoBtn      = document.getElementById('usePhotoBtn');
+    const cameraError      = document.getElementById('cameraError');
+    const cameraErrorMsg   = document.getElementById('cameraErrorMsg');
+    const cameraErrorClose = document.getElementById('cameraErrorClose');
 
-        function init() {
-            resizeCanvas();
-            applyBrushSettings();
-            generateStickerMenu();
-            generateEmojiMenu();
+    // ════════════════════════════════════════════════════════════
+    //  STATE
+    // ════════════════════════════════════════════════════════════
+    let isDrawing       = false;
+    let isErasing       = false;
+    let lastX           = 0;
+    let lastY           = 0;
+    let currentSize     = 25;
+    let currentColorHex = '#d2e6ff';
+
+    let activeStickerImg  = null;
+    let stickerMode       = false;
+    let currentStickerSize= 150;
+    let currentEmojiSize  = 80;
+
+    // ✅ Historique undo — on garde des snapshots ImageData
+    const MAX_UNDO = 20;
+    let undoStack   = [];
+    let notifTimer  = null;
+
+    let galleryImages      = [];   // { dataUrl, type: 'selfie'|'gallery' }
+    let pendingDeleteIndex = null;
+
+    let currentStream     = null;
+    let currentFacingMode = 'user';
+    let capturedPhotoDataUrl = null;
+
+    // Cache emojis déjà rendus
+    const emojiCache = new Map();
+
+    // ════════════════════════════════════════════════════════════
+    //  STICKERS & EMOJIS DATA
+    // ════════════════════════════════════════════════════════════
+    const stickers = [
+        { name: "d1",    url: "douaa1.png"  },
+        { name: "dou7",  url: "dou7.png"    },
+        { name: "dou2",  url: "dou2.png"    },
+        { name: "dou8",  url: "dou8.png"    },
+        { name: "dou6",  url: "dou6.png"    },
+        { name: "dou4",  url: "dou4.png"    },
+        { name: "dou5",  url: "dou5.png"    },
+        { name: "dou3",  url: "dou3.png"    },
+        { name: "lion1", url: "liondou.png" },
+        { name: "lion",  url: "liondo.png"  },
+    ];
+
+    const emojiCategories = {
+        "Visages":    ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🥵","🥶","🥴","😵","🤯","🤠","🥳","😎","🤓","🧐"],
+        "Gestes":     ["👋","🤚","🖐️","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","💪","🦾","❤️","🧡","💛","💚","💙","💜","💕","💞","💓","💗","💖","💘","💝","💯"],
+        "Animaux":    ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🦇","🐺","🐴","🦄","🐝","🦋","🐌","🐞","🐢","🐍","🦎","🐙","🦑","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🐘","🦛","🦒","🦘","🐕","🐈"],
+        "Nature":     ["🌸","🌹","🥀","🌺","🌻","🌼","🌷","🌱","🌲","🌳","🌴","🌵","🌾","🌿","☘️","🍀","🍁","🍂","🍃","🍄","🌍","🌕","🌙","☀️","⭐","🌟","🌠","☁️","⛅","🌈","❄️","☃️","⛄","🔥","✨","🌊","💧","⚡"],
+        "Nourriture": ["🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🍕","🍔","🍟","🌭","🍿","🍩","🍪","🍰","🎂","🍫","🍬","🍭"],
+        "Objets":     ["⌚","📱","💻","📷","📸","🎥","📞","📺","📻","💡","🔦","🔋","💰","💎","🎁","🎈","🎉","🎊","✉️","📦","🔑","🔒","✂️","📝","✏️","🔍","🔎"]
+    };
+
+    // ════════════════════════════════════════════════════════════
+    //  INIT
+    // ════════════════════════════════════════════════════════════
+    function init() {
+        resizeCanvas();
+        updateBrushUI();
+        generateStickerMenu();
+        generateEmojiMenu();
+        updateUndoBtn();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  CANVAS RESIZE — ✅ FIX : préserve le dessin
+    // ════════════════════════════════════════════════════════════
+    function resizeCanvas() {
+        // Sauvegarder le contenu actuel
+        const snapshot = canvas.width > 0
+            ? ctx.getImageData(0, 0, canvas.width, canvas.height)
+            : null;
+
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Restaurer le contenu
+        if (snapshot) {
+            ctx.putImageData(snapshot, 0, 0);
         }
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
+        // Re-appliquer les paramètres (canvas reset à chaque resize)
+        applyBrushSettings();
+    }
 
-        function hexToRgba(hex, alpha) {
-            let r = parseInt(hex.slice(1, 3), 16);
-            let g = parseInt(hex.slice(3, 5), 16);
-            let b = parseInt(hex.slice(5, 7), 16);
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        }
+    let resizeDebounce;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeDebounce);
+        resizeDebounce = setTimeout(resizeCanvas, 150);
+    });
 
-        function applyBrushSettings() {
+    // ════════════════════════════════════════════════════════════
+    //  BRUSH SETTINGS
+    // ════════════════════════════════════════════════════════════
+    function hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    function applyBrushSettings() {
+        if (isErasing) {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth   = currentSize;
+            ctx.lineCap     = 'round';
+            ctx.lineJoin    = 'round';
+            ctx.strokeStyle = 'rgba(0,0,0,1)';
+            ctx.shadowBlur  = 0;
+        } else {
             ctx.globalCompositeOperation = 'source-over';
-            ctx.lineWidth = currentSize;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
+            ctx.lineWidth   = currentSize;
+            ctx.lineCap     = 'round';
+            ctx.lineJoin    = 'round';
             ctx.strokeStyle = hexToRgba(currentColorHex, 0.35);
-            ctx.shadowBlur = currentSize * 0.8;
+            ctx.shadowBlur  = currentSize * 0.8;
             ctx.shadowColor = hexToRgba(currentColorHex, 0.9);
         }
+    }
 
-        sizeSlider.addEventListener('input', (e) => {
-            currentSize = parseInt(e.target.value);
-            applyBrushSettings();
+    function updateBrushUI() {
+        const MAX_DOT = 32;
+        const MIN_DOT = 4;
+        const dotSize = Math.round(MIN_DOT + (currentSize / 120) * (MAX_DOT - MIN_DOT));
+        brushDot.style.width  = dotSize + 'px';
+        brushDot.style.height = dotSize + 'px';
+        brushDot.style.background = isErasing ? 'rgba(255,255,255,0.5)' : currentColorHex;
+        brushDot.style.boxShadow  = isErasing ? 'none' : `0 0 8px ${currentColorHex}`;
+
+        colorDot.style.background = currentColorHex;
+
+        cursorRing.style.width  = Math.max(16, currentSize) + 'px';
+        cursorRing.style.height = Math.max(16, currentSize) + 'px';
+        cursorRing.style.borderColor = isErasing
+            ? 'rgba(255,255,255,0.5)'
+            : currentColorHex;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  UNDO SYSTEM
+    // ════════════════════════════════════════════════════════════
+    function saveSnapshot() {
+        undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        if (undoStack.length > MAX_UNDO) undoStack.shift();
+        updateUndoBtn();
+    }
+
+    function undo() {
+        if (undoStack.length === 0) {
+            showNotification('⚠️ Rien à annuler');
+            return;
+        }
+        const snap = undoStack.pop();
+        ctx.putImageData(snap, 0, 0);
+        updateUndoBtn();
+        showNotification('↩️ Annulé');
+    }
+
+    function updateUndoBtn() {
+        undoBtn.style.opacity = undoStack.length === 0 ? '0.4' : '1';
+    }
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+        if (e.key === 'e' || e.key === 'E') toggleEraser();
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  ERASER
+    // ════════════════════════════════════════════════════════════
+    function toggleEraser() {
+        isErasing = !isErasing;
+        applyBrushSettings();
+        updateBrushUI();
+        eraserBtn.classList.toggle('active-tool', isErasing);
+        showNotification(isErasing ? '🧹 Mode gomme activé' : '✏️ Mode dessin activé');
+    }
+    eraserBtn.addEventListener('click', toggleEraser);
+
+    // ════════════════════════════════════════════════════════════
+    //  SLIDER & COLOR EVENTS
+    // ════════════════════════════════════════════════════════════
+    sizeSlider.addEventListener('input', (e) => {
+        currentSize = parseInt(e.target.value);
+        applyBrushSettings();
+        updateBrushUI();
+    });
+
+    colorPicker.addEventListener('input', (e) => {
+        currentColorHex = e.target.value;
+        if (isErasing) { isErasing = false; eraserBtn.classList.remove('active-tool'); }
+        applyBrushSettings();
+        updateBrushUI();
+    });
+
+    stickerSizeSlider.addEventListener('input', (e) => {
+        currentStickerSize = parseInt(e.target.value);
+        stickerSizeValue.textContent = currentStickerSize + 'px';
+    });
+
+    emojiSizeSlider.addEventListener('input', (e) => {
+        currentEmojiSize = parseInt(e.target.value);
+        emojiSizeValue.textContent = currentEmojiSize + 'px';
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  DRAW — ✅ FIX : drawDot corrigé, context sauvegardé
+    // ════════════════════════════════════════════════════════════
+    function getPos(e) {
+        if (e.touches && e.touches.length > 0) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.touches[0].clientX - rect.left,
+                y: e.touches[0].clientY - rect.top
+            };
+        }
+        return { x: e.clientX, y: e.clientY };
+    }
+
+    function startDraw(e) {
+        if (e.target !== canvas) return;
+        const pos = getPos(e);
+
+        if (stickerMode) {
+            placeSticker(pos.x, pos.y);
+            return;
+        }
+
+        // Snapshot avant de commencer à dessiner
+        saveSnapshot();
+
+        isDrawing = true;
+        [lastX, lastY] = [pos.x, pos.y];
+        drawDot(pos.x, pos.y);
+    }
+
+    function draw(e) {
+        if (!isDrawing || stickerMode) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        [lastX, lastY] = [pos.x, pos.y];
+    }
+
+    // ✅ FIX : drawDot utilise fillStyle cohérent avec le mode
+    function drawDot(x, y) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
+        if (isErasing) {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0,0,0,1)';
+        } else {
+            ctx.fillStyle   = hexToRgba(currentColorHex, 0.35);
+            ctx.shadowBlur  = currentSize * 0.8;
+            ctx.shadowColor = hexToRgba(currentColorHex, 0.9);
+        }
+        ctx.fill();
+        ctx.restore();
+        // Re-appliquer après le restore
+        applyBrushSettings();
+    }
+
+    function endDraw() {
+        isDrawing = false;
+    }
+
+    // Cursor ring follow (desktop only)
+    canvas.addEventListener('mousemove', (e) => {
+        cursorRing.style.left = e.clientX + 'px';
+        cursorRing.style.top  = e.clientY + 'px';
+    });
+    canvas.addEventListener('mouseenter', () => { cursorRing.style.opacity = '1'; });
+    canvas.addEventListener('mouseleave', () => { cursorRing.style.opacity = '0'; endDraw(); });
+
+    canvas.addEventListener('mousedown',  startDraw);
+    canvas.addEventListener('mousemove',  draw);
+    canvas.addEventListener('mouseup',    endDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: true });
+    canvas.addEventListener('touchmove',  draw,      { passive: false });
+    canvas.addEventListener('touchend',   endDraw);
+
+    // ════════════════════════════════════════════════════════════
+    //  STICKER / EMOJI PLACEMENT — ✅ FIX : sauvegarde context
+    // ════════════════════════════════════════════════════════════
+    function placeSticker(x, y) {
+        if (!activeStickerImg || !stickerMode) return;
+
+        const size = activeStickerImg._type === 'emoji'
+            ? (activeStickerImg._emojiSize || currentEmojiSize)
+            : currentStickerSize;
+
+        saveSnapshot();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.shadowBlur  = 0;
+        ctx.shadowColor = 'transparent';
+        ctx.drawImage(activeStickerImg, x - size / 2, y - size / 2, size, size);
+        ctx.restore();
+
+        // Re-appliquer les paramètres de brosse
+        applyBrushSettings();
+
+        stickerMode      = false;
+        activeStickerImg = null;
+        showNotification('✅ Ajouté !');
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  STICKER MENU
+    // ════════════════════════════════════════════════════════════
+    function generateStickerMenu() {
+        stickerGrid.innerHTML = '';
+        stickers.forEach((sticker) => {
+            const div = document.createElement('div');
+            div.className = 'sticker-item';
+
+            const img = document.createElement('img');
+            img.src = sticker.url;
+            img.alt = sticker.name;
+            img.crossOrigin = 'Anonymous';
+            img.onerror = () => {
+                div.style.background = 'rgba(255,0,0,0.15)';
+                div.innerHTML = '<span style="color:rgba(255,255,255,0.4);font-size:10px;">❌</span>';
+            };
+
+            div.appendChild(img);
+            div.addEventListener('click', () => selectSticker(img));
+            stickerGrid.appendChild(div);
         });
+        renderGalleryStickers();
+    }
 
-        colorPicker.addEventListener('input', (e) => {
-            currentColorHex = e.target.value;
-            applyBrushSettings();
-        });
+    function renderGalleryStickers() {
+        const old = document.getElementById('gallerySection');
+        if (old) old.remove();
+        if (galleryImages.length === 0) return;
 
-        stickerSizeSlider.addEventListener('input', (e) => {
-            currentStickerSize = parseInt(e.target.value);
-            stickerSizeValue.textContent = currentStickerSize + 'px';
-        });
+        const section = document.createElement('div');
+        section.id = 'gallerySection';
+        section.style.cssText = 'grid-column:1/-1;margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;';
 
-        emojiSizeSlider.addEventListener('input', (e) => {
-            currentEmojiSize = parseInt(e.target.value);
-            emojiSizeValue.textContent = currentEmojiSize + 'px';
-        });
+        const title = document.createElement('p');
+        title.style.cssText = 'color:rgba(255,255,255,0.45);font-size:11px;margin:0 0 10px;';
+        title.textContent = `📁 Mes images (${galleryImages.length})`;
+        section.appendChild(title);
 
-        function generateStickerMenu() {
-            stickerGrid.innerHTML = '';
-            stickers.forEach((sticker) => {
-                const div = document.createElement('div');
-                div.className = 'sticker-item';
-                
-                const img = document.createElement('img');
-                img.src = sticker.url;
-                img.alt = sticker.name;
-                img.crossOrigin = "Anonymous";
-                
-                img.onerror = function() {
-                    div.style.background = 'rgba(255,0,0,0.2)';
-                    div.innerHTML = '<span style="color: white; font-size: 10px;">❌</span>';
-                };
-                
-                div.appendChild(img);
-                div.addEventListener('click', () => selectSticker(img));
-                stickerGrid.appendChild(div);
+        const grid = document.createElement('div');
+        grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:10px;';
+
+        galleryImages.forEach((imgData, index) => {
+            const div = document.createElement('div');
+            div.className = 'sticker-item';
+
+            const img = document.createElement('img');
+            img.src = imgData.dataUrl;
+            img.alt = `${imgData.type}-${index}`;
+            div.appendChild(img);
+
+            const badge = document.createElement('span');
+            badge.className = 'sticker-badge';
+            badge.textContent = imgData.type === 'selfie' ? '📷' : '🖼️';
+            div.appendChild(badge);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'sticker-remove-btn';
+            removeBtn.textContent = '✖';
+            removeBtn.title = 'Supprimer';
+            removeBtn.setAttribute('aria-label', 'Supprimer cette image');
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openDeleteConfirmation(index);
             });
-            renderGalleryStickers();
-        }
+            div.appendChild(removeBtn);
 
-        // ============================================================
-        // ✅ MODIFIÉ : FONCTION renderGalleryStickers
-        // - Affiche un badge 📷 pour les selfies, 🖼️ pour la galerie
-        // - Bouton de suppression plus gros et visible
-        // - Clic sur suppression → ouvre modal de confirmation
-        // ============================================================
-        function renderGalleryStickers() {
-            const oldGallerySection = document.getElementById('gallerySection');
-            if (oldGallerySection) oldGallerySection.remove();
-
-            if (galleryImages.length === 0) return;
-
-            const section = document.createElement('div');
-            section.id = 'gallerySection';
-            section.style.gridColumn = '1 / -1';
-            section.style.marginTop = '10px';
-            section.style.borderTop = '1px solid rgba(255,255,255,0.1)';
-            section.style.paddingTop = '10px';
-
-            const title = document.createElement('p');
-            title.style.color = 'rgba(255,255,255,0.5)';
-            title.style.fontSize = '11px';
-            title.style.margin = '0 0 10px 0';
-            title.textContent = `📁 Mes images (${galleryImages.length}) — Appuie sur ✖ pour supprimer`;
-            section.appendChild(title);
-
-            const grid = document.createElement('div');
-            grid.style.display = 'grid';
-            grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
-            grid.style.gap = '10px';
-
-            galleryImages.forEach((imgData, index) => {
-                const div = document.createElement('div');
-                div.className = 'sticker-item';
-                div.style.position = 'relative';
-
-                const img = document.createElement('img');
-                img.src = imgData.dataUrl;
-                img.alt = imgData.type + '-' + index;
-
-                div.appendChild(img);
-
-                // ✅ NOUVEAU : Badge indicateur du type (Selfie ou Galerie)
-                const badge = document.createElement('span');
-                badge.className = 'sticker-badge';
-                badge.textContent = imgData.type === 'selfie' ? '📷' : '🖼️';
-                badge.title = imgData.type === 'selfie' ? 'Selfie' : 'Galerie';
-                div.appendChild(badge);
-
-                // ✅ MODIFIÉ : Bouton suppression amélioré
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'sticker-remove-btn';
-                removeBtn.textContent = '✖';
-                removeBtn.title = 'Supprimer';
-                removeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openDeleteConfirmation(index);
-                });
-                div.appendChild(removeBtn);
-
-                div.addEventListener('click', () => selectSticker(img));
-                grid.appendChild(div);
-            });
-
-            section.appendChild(grid);
-            stickerGrid.appendChild(section);
-        }
-
-        // ============================================================
-        // ✅ NOUVEAU : OUVRIR LA MODAL DE CONFIRMATION
-        // ============================================================
-        function openDeleteConfirmation(index) {
-            pendingDeleteIndex = index;
-            const imgData = galleryImages[index];
-            confirmPreview.src = imgData.dataUrl;
-            confirmModal.classList.add('show');
-        }
-
-        // ============================================================
-        // ✅ NOUVEAU : FERMER LA MODAL SANS SUPPRIMER
-        // ============================================================
-        function closeDeleteConfirmation() {
-            pendingDeleteIndex = null;
-            confirmModal.classList.remove('show');
-        }
-
-        // ============================================================
-        // ✅ NOUVEAU : CONFIRMER LA SUPPRESSION
-        // ============================================================
-        function confirmDeleteImage() {
-            if (pendingDeleteIndex === null) return;
-            
-            const removed = galleryImages.splice(pendingDeleteIndex, 1)[0];
-            renderGalleryStickers();
-            closeDeleteConfirmation();
-            
-            const typeLabel = removed.type === 'selfie' ? 'selfie' : 'image';
-            showNotification(`🗑️ ${typeLabel} supprimé(e)`);
-        }
-
-        // ✅ NOUVEAU : Event listeners modal
-        confirmCancel.addEventListener('click', closeDeleteConfirmation);
-        confirmDelete.addEventListener('click', confirmDeleteImage);
-        confirmModal.addEventListener('click', (e) => {
-            if (e.target === confirmModal) closeDeleteConfirmation();
+            div.addEventListener('click', () => selectSticker(img));
+            grid.appendChild(div);
         });
 
-        function selectSticker(imgElement) {
-            activeStickerImg = imgElement;
-            activeStickerImg._type = 'image';
+        section.appendChild(grid);
+        stickerGrid.appendChild(section);
+    }
+
+    function selectSticker(imgElement) {
+        activeStickerImg = imgElement;
+        activeStickerImg._type = 'image';
+        stickerMode = true;
+        stickerPanel.classList.remove('open');
+        showNotification('📍 Touche l\'écran pour placer !');
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  EMOJI MENU — ✅ FIX : cache des emojis rendus
+    // ════════════════════════════════════════════════════════════
+    function generateEmojiMenu() {
+        emojiGrid.innerHTML = '';
+        Object.entries(emojiCategories).forEach(([category, emojis]) => {
+            const catTitle = document.createElement('div');
+            catTitle.style.cssText = 'grid-column:1/-1;color:rgba(255,255,255,0.35);font-size:11px;padding:4px 0 2px 4px;';
+            catTitle.textContent = category;
+            emojiGrid.appendChild(catTitle);
+
+            emojis.forEach(emoji => {
+                const div = document.createElement('div');
+                div.className = 'emoji-item';
+                div.textContent = emoji;
+                div.setAttribute('role', 'button');
+                div.setAttribute('aria-label', emoji);
+                div.addEventListener('click', () => selectEmoji(emoji));
+                emojiGrid.appendChild(div);
+            });
+        });
+    }
+
+    function selectEmoji(emoji) {
+        const cacheKey = `${emoji}_${currentEmojiSize}`;
+
+        if (emojiCache.has(cacheKey)) {
+            const cached = emojiCache.get(cacheKey);
+            activeStickerImg = cached;
             stickerMode = true;
-            stickerPanel.classList.remove('open');
-            showNotification('📍 Touche l\'écran pour placer !');
-        }
-
-        function generateEmojiMenu() {
-            emojiGrid.innerHTML = '';
-            Object.keys(emojiCategories).forEach(category => {
-                const catTitle = document.createElement('div');
-                catTitle.style.gridColumn = '1 / -1';
-                catTitle.style.color = 'rgba(255,255,255,0.4)';
-                catTitle.style.fontSize = '11px';
-                catTitle.style.padding = '5px 0 2px 5px';
-                catTitle.textContent = category;
-                emojiGrid.appendChild(catTitle);
-
-                emojiCategories[category].forEach(emoji => {
-                    const div = document.createElement('div');
-                    div.className = 'emoji-item';
-                    div.textContent = emoji;
-                    div.addEventListener('click', () => selectEmoji(emoji));
-                    emojiGrid.appendChild(div);
-                });
-            });
-        }
-
-        function selectEmoji(emoji) {
-            const tempCanvas = document.createElement('canvas');
-            const size = currentEmojiSize * 2;
-            tempCanvas.width = size;
-            tempCanvas.height = size;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.font = `${size * 0.85}px serif`;
-            tempCtx.textAlign = 'center';
-            tempCtx.textBaseline = 'middle';
-            tempCtx.fillText(emoji, size / 2, size / 2);
-
-            const img = new Image();
-            img.src = tempCanvas.toDataURL();
-            img._type = 'emoji';
-            img._emojiSize = currentEmojiSize;
-
-            img.onload = () => {
-                activeStickerImg = img;
-                stickerMode = true;
-                emojiPanel.classList.remove('open');
-                showNotification('📍 Touche l\'écran pour placer l\'emoji !');
-            };
-        }
-
-        galleryBtn.addEventListener('click', () => galleryInput.click());
-
-        // ============================================================
-        // ✅ MODIFIÉ : Chargement galerie → marque le type 'gallery'
-        // ============================================================
-        galleryInput.addEventListener('change', (e) => {
-            const files = e.target.files;
-            if (!files || files.length === 0) return;
-
-            let loaded = 0;
-            const total = files.length;
-
-            Array.from(files).forEach(file => {
-                if (!file.type.startsWith('image/')) return;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    galleryImages.push({
-                        dataUrl: event.target.result,
-                        type: 'gallery' // ✅ NOUVEAU : type galerie
-                    });
-                    loaded++;
-                    if (loaded >= total) {
-                        renderGalleryStickers();
-                        showNotification(`✅ ${loaded} image(s) ajoutée(s) !`);
-                        stickerPanel.classList.add('open');
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-            galleryInput.value = '';
-        });
-
-        emojiBtn.addEventListener('click', () => {
-            emojiPanel.classList.add('open');
-            stickerPanel.classList.remove('open');
-        });
-
-        closeEmojiBtn.addEventListener('click', () => {
             emojiPanel.classList.remove('open');
-            stickerMode = false;
-        });
-
-        function placeSticker(x, y) {
-            if (!activeStickerImg || !stickerMode) return;
-
-            let size;
-            if (activeStickerImg._type === 'emoji') {
-                size = activeStickerImg._emojiSize || currentEmojiSize;
-            } else {
-                size = currentStickerSize;
-            }
-
-            const ctxBackup = ctx.globalCompositeOperation;
-            const shadowBackup = ctx.shadowBlur;
-            const strokeBackup = ctx.strokeStyle;
-            const shadowColorBackup = ctx.shadowColor;
-
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = 'transparent';
-
-            ctx.drawImage(activeStickerImg, x - size/2, y - size/2, size, size);
-
-            ctx.globalCompositeOperation = ctxBackup;
-            ctx.shadowBlur = shadowBackup;
-            ctx.strokeStyle = strokeBackup;
-            ctx.shadowColor = shadowColorBackup;
-
-            stickerMode = false;
-            activeStickerImg = null;
-            showNotification('✅ Ajouté !');
+            showNotification('📍 Touche l\'écran pour placer l\'emoji !');
+            return;
         }
 
-        stickerBtn.addEventListener('click', () => {
-            stickerPanel.classList.add('open');
+        const size = currentEmojiSize * 2;
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width  = size;
+        tempCanvas.height = size;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.font          = `${size * 0.85}px serif`;
+        tempCtx.textAlign     = 'center';
+        tempCtx.textBaseline  = 'middle';
+        tempCtx.fillText(emoji, size / 2, size / 2);
+
+        const img = new Image();
+        img.src      = tempCanvas.toDataURL();
+        img._type    = 'emoji';
+        img._emojiSize = currentEmojiSize;
+
+        img.onload = () => {
+            emojiCache.set(cacheKey, img);
+            activeStickerImg = img;
+            stickerMode = true;
             emojiPanel.classList.remove('open');
-        });
+            showNotification('📍 Touche l\'écran pour placer l\'emoji !');
+        };
+    }
 
-        closeStickerBtn.addEventListener('click', () => {
-            stickerPanel.classList.remove('open');
-            stickerMode = false;
-        });
+    // ════════════════════════════════════════════════════════════
+    //  GALLERY INPUT
+    // ════════════════════════════════════════════════════════════
+    galleryBtn.addEventListener('click', () => galleryInput.click());
 
-        function getPos(e) {
-            if (e.touches && e.touches.length > 0) {
-                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }
-            return { x: e.clientX, y: e.clientY };
-        }
+    galleryInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+        if (files.length === 0) return;
 
-        function startDraw(e) {
-            if (e.target !== canvas && !e.target.classList.contains('sticker-item')) return;
-            const pos = getPos(e);
-            if (stickerMode) {
-                placeSticker(pos.x, pos.y);
-                return;
-            }
-            isDrawing = true;
-            [lastX, lastY] = [pos.x, pos.y];
-            drawDot(pos.x, pos.y);
-        }
-
-        function draw(e) {
-            if (!isDrawing || stickerMode) return;
-            e.preventDefault();
-            const pos = getPos(e);
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-            [lastX, lastY] = [pos.x, pos.y];
-        }
-
-        function drawDot(x, y) {
-            ctx.beginPath();
-            ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
-            ctx.fillStyle = ctx.strokeStyle;
-            ctx.fill();
-        }
-
-        function endDraw() {
-            isDrawing = false;
-        }
-
-        function showNotification(message) {
-            notification.textContent = message;
-            notification.classList.add('show');
-            setTimeout(() => notification.classList.remove('show'), 3000);
-        }
-
-        sendEmailBtn.addEventListener('click', async () => {
-            loading.classList.add('show');
-            try {
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-                const maxWidth = 800;
-                const maxHeight = 600;
-                let width = canvas.width;
-                let height = canvas.height;
-                if (width > maxWidth) { height = (height * maxWidth) / width; width = maxWidth; }
-                if (height > maxHeight) { width = (width * maxHeight) / height; height = maxHeight; }
-                tempCanvas.width = width;
-                tempCanvas.height = height;
-                tempCtx.fillStyle = '#0a0a12';
-                tempCtx.fillRect(0, 0, width, height);
-                tempCtx.drawImage(canvas, 0, 0, width, height);
-                
-                const compressedDataUrl = tempCanvas.toDataURL('image/jpeg', 0.7);
-                const base64Image = compressedDataUrl.split(',')[1];
-                
-                const templateParams = {
-                    to_email: TO_EMAIL,
-                    message: 'Nouveau dessin brouillard !',
-                    image: base64Image,
-                    image_name: `dessin-${Date.now()}.jpg`
-                };
-                
-                await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
-                loading.classList.remove('show');
-                showNotification('✅ Email envoyé !');
-            } catch (error) {
-                loading.classList.remove('show');
-                showNotification('❌ Erreur: ' + (error.text || error.message));
-            }
-        });
-
-        saveBtn.addEventListener('click', async () => {
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            tempCtx.fillStyle = '#0a0a12';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            tempCtx.drawImage(canvas, 0, 0);
-            const dataURL = tempCanvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = `dessin-brouillard-${Date.now()}.png`;
-            link.href = dataURL;
-            link.click();
-            showNotification('✅ Sauvegardé !');
-        });
-
-        clearBtn.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            applyBrushSettings();
-            showNotification('🗑️ Effacé');
-        });
-
-        canvas.addEventListener('mousedown', startDraw);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', endDraw);
-        canvas.addEventListener('mouseout', endDraw);
-        canvas.addEventListener('touchstart', startDraw);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', endDraw);
-
-        document.querySelectorAll('.btn, .sticker-item, .emoji-item, .close-stickers, input, .sticker-remove-btn').forEach(el => {
-            el.addEventListener('touchstart', (e) => e.stopPropagation());
-        });
-
-        async function startCamera(facingMode = 'user') {
-            stopCamera();
-            cameraError.classList.remove('show');
-            cameraVideo.style.display = 'block';
-
-            try {
-                const constraints = {
-                    video: {
-                        facingMode: facingMode,
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
-                    audio: false
-                };
-
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                currentStream = stream;
-                cameraVideo.srcObject = stream;
-                cameraVideo.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
-                cameraTitle.textContent = facingMode === 'user' ? '📷 Selfie' : '📷 Caméra arrière';
-
-            } catch (err) {
-                console.error('Erreur caméra:', err);
-                cameraVideo.style.display = 'none';
-                
-                let errorMsg = 'Impossible d\'accéder à la caméra.';
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    errorMsg = 'Permission refusée. Autorise l\'accès à la caméra dans les paramètres.';
-                } else if (err.name === 'NotFoundError') {
-                    errorMsg = 'Aucune caméra détectée.';
-                } else if (err.name === 'NotReadableError') {
-                    errorMsg = 'La caméra est déjà utilisée.';
-                } else if (err.name === 'OverconstrainedError') {
-                    try {
-                        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                        currentStream = fallbackStream;
-                        cameraVideo.srcObject = fallbackStream;
-                        cameraVideo.style.transform = 'scaleX(1)';
-                        cameraTitle.textContent = '📷 Caméra';
-                        return;
-                    } catch (e2) {
-                        errorMsg = 'Impossible d\'accéder à la caméra.';
-                    }
+        let loaded = 0;
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                galleryImages.push({ dataUrl: ev.target.result, type: 'gallery' });
+                if (++loaded >= files.length) {
+                    renderGalleryStickers();
+                    showNotification(`✅ ${loaded} image(s) ajoutée(s) !`);
+                    stickerPanel.classList.add('open');
                 }
-                
-                cameraErrorMsg.textContent = errorMsg;
-                cameraError.classList.add('show');
-            }
-        }
-
-        function stopCamera() {
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-                currentStream = null;
-            }
-            cameraVideo.srcObject = null;
-        }
-
-        function openCamera() {
-            cameraOverlay.classList.add('show');
-            cameraPreview.style.display = 'none';
-            cameraBottomBar.style.display = 'flex';
-            cameraConfirmBar.classList.remove('show');
-            capturedPhotoDataUrl = null;
-            currentFacingMode = 'user';
-            startCamera(currentFacingMode);
-        }
-
-        function closeCamera() {
-            cameraOverlay.classList.remove('show');
-            stopCamera();
-            cameraPreview.style.display = 'none';
-            cameraBottomBar.style.display = 'flex';
-            cameraConfirmBar.classList.remove('show');
-            capturedPhotoDataUrl = null;
-        }
-
-        function switchCamera() {
-            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-            startCamera(currentFacingMode);
-        }
-
-        function capturePhoto() {
-            if (!currentStream) return;
-
-            cameraFlash.classList.add('flash');
-            setTimeout(() => cameraFlash.classList.remove('flash'), 200);
-
-            const captureCanvas = document.createElement('canvas');
-            const captureCtx = captureCanvas.getContext('2d');
-            captureCanvas.width = cameraVideo.videoWidth;
-            captureCanvas.height = cameraVideo.videoHeight;
-
-            if (currentFacingMode === 'user') {
-                captureCtx.translate(captureCanvas.width, 0);
-                captureCtx.scale(-1, 1);
-            }
-
-            captureCtx.drawImage(cameraVideo, 0, 0, captureCanvas.width, captureCanvas.height);
-            capturedPhotoDataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
-
-            cameraPreview.src = capturedPhotoDataUrl;
-            cameraPreview.style.display = 'block';
-            cameraBottomBar.style.display = 'none';
-            cameraConfirmBar.classList.add('show');
-            stopCamera();
-        }
-
-        function retakePhoto() {
-            capturedPhotoDataUrl = null;
-            cameraPreview.style.display = 'none';
-            cameraBottomBar.style.display = 'flex';
-            cameraConfirmBar.classList.remove('show');
-            startCamera(currentFacingMode);
-        }
-
-        // ============================================================
-        // ✅ MODIFIÉ : usePhoto() ajoute maintenant le type 'selfie'
-        // ============================================================
-        function usePhoto() {
-            if (!capturedPhotoDataUrl) return;
-
-            // ✅ MODIFIÉ : Sauvegarde avec le type 'selfie'
-            galleryImages.push({
-                dataUrl: capturedPhotoDataUrl,
-                type: 'selfie'
-            });
-            renderGalleryStickers();
-
-            const img = new Image();
-            img.src = capturedPhotoDataUrl;
-            img._type = 'image';
-
-            img.onload = () => {
-                activeStickerImg = img;
-                stickerMode = true;
-                closeCamera();
-                showNotification('📍 Touche l\'écran pour placer ta photo !');
             };
-        }
-
-        selfieBtn.addEventListener('click', () => {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                showNotification('❌ Caméra non supportée');
-                return;
-            }
-            openCamera();
+            reader.readAsDataURL(file);
         });
+        galleryInput.value = '';
+    });
 
-        cameraCloseBtn.addEventListener('click', closeCamera);
-        cameraSwitchBtn.addEventListener('click', switchCamera);
-        captureBtn.addEventListener('click', capturePhoto);
-        retakeBtn.addEventListener('click', retakePhoto);
-        usePhotoBtn.addEventListener('click', usePhoto);
-        cameraErrorClose.addEventListener('click', closeCamera);
+    // ════════════════════════════════════════════════════════════
+    //  PANEL TOGGLES
+    // ════════════════════════════════════════════════════════════
+    function closeAllPanels() {
+        stickerPanel.classList.remove('open');
+        emojiPanel.classList.remove('open');
+    }
 
-        cameraOverlay.addEventListener('touchstart', (e) => e.stopPropagation());
-        cameraOverlay.addEventListener('touchmove', (e) => e.stopPropagation());
+    stickerBtn.addEventListener('click', () => {
+        const isOpen = stickerPanel.classList.contains('open');
+        closeAllPanels();
+        if (!isOpen) stickerPanel.classList.add('open');
+    });
+    closeStickerBtn.addEventListener('click', () => {
+        stickerPanel.classList.remove('open');
+        stickerMode = false;
+    });
 
-        init();
+    emojiBtn.addEventListener('click', () => {
+        const isOpen = emojiPanel.classList.contains('open');
+        closeAllPanels();
+        if (!isOpen) emojiPanel.classList.add('open');
+    });
+    closeEmojiBtn.addEventListener('click', () => {
+        emojiPanel.classList.remove('open');
+        stickerMode = false;
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  CONFIRM DELETE MODAL
+    // ════════════════════════════════════════════════════════════
+    function openDeleteConfirmation(index) {
+        pendingDeleteIndex = index;
+        confirmPreview.src = galleryImages[index].dataUrl;
+        confirmModal.classList.add('show');
+    }
+    function closeDeleteConfirmation() {
+        pendingDeleteIndex = null;
+        confirmModal.classList.remove('show');
+    }
+    function confirmDeleteImage() {
+        if (pendingDeleteIndex === null) return;
+        const removed = galleryImages.splice(pendingDeleteIndex, 1)[0];
+        renderGalleryStickers();
+        closeDeleteConfirmation();
+        showNotification(`🗑️ ${removed.type === 'selfie' ? 'Selfie' : 'Image'} supprimé(e)`);
+    }
+    confirmCancel.addEventListener('click', closeDeleteConfirmation);
+    confirmDelete.addEventListener('click', confirmDeleteImage);
+    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeDeleteConfirmation(); });
+
+    // ════════════════════════════════════════════════════════════
+    //  UNDO & CLEAR & SAVE & EMAIL
+    // ════════════════════════════════════════════════════════════
+    undoBtn.addEventListener('click', undo);
+
+    clearBtn.addEventListener('click', () => {
+        saveSnapshot();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        applyBrushSettings();
+        showNotification('🗑️ Canvas effacé');
+    });
+
+    saveBtn.addEventListener('click', () => {
+        const tmp = document.createElement('canvas');
+        tmp.width  = canvas.width;
+        tmp.height = canvas.height;
+        const tc   = tmp.getContext('2d');
+        tc.fillStyle = '#0a0a12';
+        tc.fillRect(0, 0, tmp.width, tmp.height);
+        tc.drawImage(canvas, 0, 0);
+        const link = document.createElement('a');
+        link.download = `dessin-brouillard-${Date.now()}.png`;
+        link.href = tmp.toDataURL('image/png');
+        link.click();
+        showNotification('✅ Image sauvegardée !');
+    });
+
+    sendEmailBtn.addEventListener('click', async () => {
+        loading.classList.add('show');
+        try {
+            const tmp = document.createElement('canvas');
+            const maxW = 800, maxH = 600;
+            let w = canvas.width, h = canvas.height;
+            if (w > maxW) { h = (h * maxW) / w; w = maxW; }
+            if (h > maxH) { w = (w * maxH) / h; h = maxH; }
+            tmp.width = w; tmp.height = h;
+            const tc = tmp.getContext('2d');
+            tc.fillStyle = '#0a0a12';
+            tc.fillRect(0, 0, w, h);
+            tc.drawImage(canvas, 0, 0, w, h);
+
+            const base64 = tmp.toDataURL('image/jpeg', 0.72).split(',')[1];
+            await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+                to_email:   TO_EMAIL,
+                message:    'Nouveau dessin brouillard !',
+                image:      base64,
+                image_name: `dessin-${Date.now()}.jpg`
+            });
+            showNotification('✅ Email envoyé avec succès !');
+        } catch (err) {
+            showNotification('❌ Erreur : ' + (err.text || err.message || 'inconnue'));
+        } finally {
+            loading.classList.remove('show');
+        }
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  CAMERA
+    // ════════════════════════════════════════════════════════════
+    async function startCamera(facingMode = 'user') {
+        stopCamera();
+        cameraError.classList.remove('show');
+        cameraVideo.style.display = 'block';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            currentStream = stream;
+            cameraVideo.srcObject = stream;
+            cameraVideo.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+            cameraTitle.textContent = facingMode === 'user' ? '📷 Selfie' : '📷 Caméra arrière';
+        } catch (err) {
+            cameraVideo.style.display = 'none';
+            let msg = 'Impossible d\'accéder à la caméra.';
+            if      (err.name === 'NotAllowedError')    msg = 'Permission refusée. Autorise la caméra dans les paramètres.';
+            else if (err.name === 'NotFoundError')      msg = 'Aucune caméra détectée.';
+            else if (err.name === 'NotReadableError')   msg = 'La caméra est déjà utilisée par une autre app.';
+            else if (err.name === 'OverconstrainedError') {
+                try {
+                    const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    currentStream = s;
+                    cameraVideo.srcObject = s;
+                    cameraVideo.style.transform = 'scaleX(1)';
+                    cameraTitle.textContent = '📷 Caméra';
+                    return;
+                } catch { /* fall through */ }
+            }
+            cameraErrorMsg.textContent = msg;
+            cameraError.classList.add('show');
+        }
+    }
+
+    function stopCamera() {
+        currentStream?.getTracks().forEach(t => t.stop());
+        currentStream = null;
+        cameraVideo.srcObject = null;
+    }
+
+    function openCamera() {
+        cameraOverlay.classList.add('show');
+        cameraPreview.style.display = 'none';
+        cameraBottomBar.style.display = 'flex';
+        cameraConfirmBar.classList.remove('show');
+        capturedPhotoDataUrl = null;
+        currentFacingMode = 'user';
+        startCamera(currentFacingMode);
+    }
+
+    function closeCamera() {
+        cameraOverlay.classList.remove('show');
+        stopCamera();
+        cameraPreview.style.display = 'none';
+        cameraBottomBar.style.display = 'flex';
+        cameraConfirmBar.classList.remove('show');
+        capturedPhotoDataUrl = null;
+    }
+
+    function capturePhoto() {
+        if (!currentStream) return;
+        cameraFlash.classList.add('flash');
+        setTimeout(() => cameraFlash.classList.remove('flash'), 250);
+
+        const cap = document.createElement('canvas');
+        cap.width  = cameraVideo.videoWidth;
+        cap.height = cameraVideo.videoHeight;
+        const cc   = cap.getContext('2d');
+        if (currentFacingMode === 'user') {
+            cc.translate(cap.width, 0);
+            cc.scale(-1, 1);
+        }
+        cc.drawImage(cameraVideo, 0, 0, cap.width, cap.height);
+        capturedPhotoDataUrl = cap.toDataURL('image/jpeg', 0.85);
+
+        cameraPreview.src  = capturedPhotoDataUrl;
+        cameraPreview.style.display  = 'block';
+        cameraBottomBar.style.display = 'none';
+        cameraConfirmBar.classList.add('show');
+        stopCamera();
+    }
+
+    function retakePhoto() {
+        capturedPhotoDataUrl = null;
+        cameraPreview.style.display  = 'none';
+        cameraBottomBar.style.display = 'flex';
+        cameraConfirmBar.classList.remove('show');
+        startCamera(currentFacingMode);
+    }
+
+    function usePhoto() {
+        if (!capturedPhotoDataUrl) return;
+        galleryImages.push({ dataUrl: capturedPhotoDataUrl, type: 'selfie' });
+        renderGalleryStickers();
+
+        const img = new Image();
+        img.src   = capturedPhotoDataUrl;
+        img._type = 'image';
+        img.onload = () => {
+            activeStickerImg = img;
+            stickerMode = true;
+            closeCamera();
+            showNotification('📍 Touche l\'écran pour placer ta photo !');
+        };
+    }
+
+    selfieBtn.addEventListener('click', () => {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            showNotification('❌ Caméra non supportée sur cet appareil');
+            return;
+        }
+        openCamera();
+    });
+
+    cameraCloseBtn.addEventListener('click', closeCamera);
+    cameraSwitchBtn.addEventListener('click', () => {
+        currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+        startCamera(currentFacingMode);
+    });
+    captureBtn.addEventListener('click', capturePhoto);
+    retakeBtn.addEventListener('click', retakePhoto);
+    usePhotoBtn.addEventListener('click', usePhoto);
+    cameraErrorClose.addEventListener('click', closeCamera);
+
+    // Empêcher la propagation du toucher sur les overlays
+    [cameraOverlay, stickerPanel, emojiPanel, confirmModal].forEach(el => {
+        el.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+        el.addEventListener('touchmove',  e => e.stopPropagation(), { passive: false });
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  NOTIFICATION — ✅ FIX : timer propre pour éviter les chevauchements
+    // ════════════════════════════════════════════════════════════
+    function showNotification(message) {
+        if (notifTimer) clearTimeout(notifTimer);
+        notification.textContent = message;
+        notification.classList.add('show');
+        notifTimer = setTimeout(() => {
+            notification.classList.remove('show');
+            notifTimer = null;
+        }, 2800);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  START
+    // ════════════════════════════════════════════════════════════
+    init();
     </script>
 </body>
 </html>
-
